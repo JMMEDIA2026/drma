@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Play, Flame, ChevronRight, Sparkles, TrendingUp, Filter, Trash2, Globe, ShieldAlert, Calendar } from 'lucide-react';
+import { Play, Flame, ChevronRight, Sparkles, TrendingUp, Filter, Trash2, Globe, ShieldAlert, Calendar, LayoutGrid, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
 import { BENTO_COLLECTIONS } from '../data/dramas';
 import { AdBanner } from './AdBanner';
 import { getGenreTheme, getDramaYear } from '../data/genreStyles';
+import { DRAMA_CATEGORIES } from '../data/categories';
+import { fetchDramasByCategory } from '../services/api';
 
 const TAG_FILTERS = [
   '전체',
@@ -51,6 +53,22 @@ export const HomeView: React.FC = () => {
   } = useApp();
 
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+  const [liveCategoryId, setLiveCategoryId] = useState<number | null>(null);
+  const [liveCategoryDramas, setLiveCategoryDramas] = useState<Drama[] | null>(null);
+  const [liveCategoryLoading, setLiveCategoryLoading] = useState(false);
+
+  const handleLiveCategoryClick = async (id: number | null) => {
+    if (id === null) {
+      setLiveCategoryId(null);
+      setLiveCategoryDramas(null);
+      return;
+    }
+    setLiveCategoryId(id);
+    setLiveCategoryLoading(true);
+    const results = await fetchDramasByCategory(id, 1);
+    setLiveCategoryDramas(results);
+    setLiveCategoryLoading(false);
+  };
 
   // Top banner dramas
   const heroDramas = dramas.slice(0, 5);
@@ -71,6 +89,9 @@ export const HomeView: React.FC = () => {
       });
     }
     if (homeCategory === '분류') {
+      if (liveCategoryId !== null) {
+        return liveCategoryDramas || [];
+      }
       let list = dramas;
       if (selectedTagFilter && selectedTagFilter !== '전체') {
         list = list.filter(d =>
@@ -151,6 +172,44 @@ export const HomeView: React.FC = () => {
         </div>
       )}
 
+      {/* Category: '분류' Live DramaBox Category Chips (real catalog categories) */}
+      {homeCategory === '분류' && (
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-semibold pl-1 shrink-0">
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>카테고리</span>
+            {liveCategoryLoading && <Loader2 className="w-3 h-3 animate-spin text-rose-400" />}
+          </div>
+          <button
+            onClick={() => handleLiveCategoryClick(null)}
+            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              liveCategoryId === null
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
+                : 'bg-[#1C1C24] text-zinc-400 hover:text-zinc-200 border border-white/5'
+            }`}
+          >
+            전체
+          </button>
+          {DRAMA_CATEGORIES.map(cat => {
+            const isSelected = liveCategoryId === cat.id;
+            return (
+              <button
+                id={`btn-category-${cat.id}`}
+                key={cat.id}
+                onClick={() => handleLiveCategoryClick(cat.id)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  isSelected
+                    ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
+                    : 'bg-[#1C1C24] text-zinc-400 hover:text-zinc-200 border border-white/5'
+                }`}
+              >
+                {cat.ko}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Continue Watching Section (이어보기) - Small Card List style with emphasized progress bar */}
       {homeCategory === '추천' && watchHistory.length > 0 && (
         <div className="space-y-3">
@@ -163,7 +222,7 @@ export const HomeView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {watchHistory.slice(0, 2).map((item) => {
+            {watchHistory.slice(0, 1).map((item) => {
               const matchedDrama = dramas.find(d => d.bookId === item.bookId);
               return (
                 <div
@@ -473,7 +532,7 @@ export const HomeView: React.FC = () => {
                 : homeCategory === '신작'
                 ? '따끈따끈한 신작 드라마'
                 : homeCategory === '분류'
-                ? `${selectedTagFilter || '전체'} 드라마`
+                ? `${(liveCategoryId !== null ? DRAMA_CATEGORIES.find(c => c.id === liveCategoryId)?.ko : selectedTagFilter) || '전체'} 드라마`
                 : homeCategory === '성인'
                 ? '19세 이상 성인 컨텐츠'
                 : '지금 뜨는 인기 숏폼'}

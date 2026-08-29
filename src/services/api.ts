@@ -75,6 +75,54 @@ export async function fetchDramaCategories(id?: string, page?: number): Promise<
   return null;
 }
 
+// Fetches real DramaBox catalog items for a live category id (see
+// src/data/categories.ts) and transforms them into the app's Drama shape,
+// so the '분류' tab's live category chips show actual matching dramas
+// instead of client-side-guessed tag matches.
+//
+// NOTE: the DramaBox category API uses a DIFFERENT numeric id space per
+// locale (id 458 means "Balas Dendam" in the default/Indonesian space, but
+// resolves to nothing under locale=ko, which has its own distinct ids).
+// The ids in src/data/categories.ts were captured from the Indonesian
+// space, so this always queries with that locale regardless of the app's
+// current UI language, otherwise the id lookup silently returns 0 results.
+export async function fetchDramasByCategory(categoryId: number, page: number = 1): Promise<Drama[]> {
+  try {
+    const params = new URLSearchParams({ id: String(categoryId), page: String(page), locale: 'in' });
+    const res = await fetch(`/api/proxy/dramabox/category?${params.toString()}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+
+    return results.map((item: any, index: number): Drama => {
+      const genreArr = Array.isArray(item.genre) ? item.genre : [];
+      const tags = Array.isArray(item.tags) && item.tags.length > 0 ? item.tags : [];
+      const tagNames = [...genreArr, ...tags].length > 0 ? [...genreArr, ...tags] : ['인기'];
+      const genre = tagNames[0] ? `${tagNames[0]}${tagNames[1] ? ' / ' + tagNames[1] : ''}` : '드라마';
+      const totalEp = item.episodes || Math.floor(Math.random() * 30) + 60;
+      const rawRating = typeof item.ratings === 'number' ? item.ratings : 9;
+
+      return {
+        bookId: String(item.id || `cat_${categoryId}_${index}`),
+        bookName: item.title || '제목 없음',
+        introduction: item.synopsis || item.desc || '',
+        cover: item.cover || '',
+        tagNames,
+        hotCode: item.views || '0',
+        totalEpisodes: totalEp,
+        badge: index === 0 ? '인기' : undefined,
+        rating: Math.min(5, Math.round((rawRating / 2) * 10) / 10),
+        genre,
+        isExclusive: true,
+        episodes: generateEpisodes(totalEp, item.title || 'K-드라마'),
+      };
+    });
+  } catch (e) {
+    console.error('Failed to fetch dramas by category:', e);
+    return [];
+  }
+}
+
 export async function fetchDramaDetailApi(bookId: string, locale: string = 'ko'): Promise<any> {
   try {
     const res = await fetch(`/api/proxy/dramabox/detail?id=${encodeURIComponent(bookId)}&locale=${encodeURIComponent(locale)}`);
