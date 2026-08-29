@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Film, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Film, Mail, Lock, User, Eye, EyeOff, Globe } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 export const AuthView: React.FC = () => {
-  const { login, signup, authError } = useApp();
+  const { login, signup, authError, t, setLanguageModalOpen } = useApp();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -39,7 +39,16 @@ export const AuthView: React.FC = () => {
   const error = localError || authError;
 
   return (
-    <div className="min-h-screen bg-[#101014] text-zinc-100 flex flex-col items-center justify-center px-6 py-10 font-sans">
+    <div className="min-h-screen bg-[#101014] text-zinc-100 flex flex-col items-center justify-center px-6 py-10 font-sans relative">
+      <button
+        id="btn-auth-language"
+        onClick={() => setLanguageModalOpen(true)}
+        className="absolute top-4 right-4 p-2.5 rounded-full bg-[#1C1C24] hover:bg-[#23232D] border border-white/10 text-zinc-300 transition-colors"
+        title={t('common_language')}
+      >
+        <Globe className="w-4 h-4" />
+      </button>
+
       <div className="w-full max-w-sm space-y-7">
         {/* Brand */}
         <div className="flex flex-col items-center gap-3 text-center">
@@ -47,8 +56,8 @@ export const AuthView: React.FC = () => {
             <Film className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-white">DramaBox</h1>
-            <p className="text-xs text-zinc-400 mt-1">최신 K-드라마 숏폼 스트리밍</p>
+            <h1 className="text-xl font-extrabold text-white">{t('auth_title')}</h1>
+            <p className="text-xs text-zinc-400 mt-1">{t('auth_subtitle')}</p>
           </div>
         </div>
 
@@ -62,7 +71,7 @@ export const AuthView: React.FC = () => {
               mode === 'login' ? 'bg-rose-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            로그인
+            {t('auth_login')}
           </button>
           <button
             id="btn-auth-tab-signup"
@@ -72,7 +81,7 @@ export const AuthView: React.FC = () => {
               mode === 'signup' ? 'bg-rose-600 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'
             }`}
           >
-            회원가입
+            {t('auth_signup')}
           </button>
         </div>
 
@@ -86,7 +95,7 @@ export const AuthView: React.FC = () => {
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="닉네임"
+                placeholder={t('auth_nickname')}
                 className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-[#1C1C24] border border-white/10 text-white text-sm placeholder:text-zinc-500 outline-none focus:border-rose-500 transition-colors"
                 required
               />
@@ -100,7 +109,7 @@ export const AuthView: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="이메일"
+              placeholder={t('auth_email')}
               className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-[#1C1C24] border border-white/10 text-white text-sm placeholder:text-zinc-500 outline-none focus:border-rose-500 transition-colors"
               required
             />
@@ -113,7 +122,7 @@ export const AuthView: React.FC = () => {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호 (8자 이상)"
+              placeholder={t('auth_password')}
               className="w-full pl-10 pr-10 py-3 rounded-xl bg-[#1C1C24] border border-white/10 text-white text-sm placeholder:text-zinc-500 outline-none focus:border-rose-500 transition-colors"
               minLength={8}
               required
@@ -136,7 +145,7 @@ export const AuthView: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="비밀번호 확인"
+                placeholder={t('auth_confirm_password')}
                 className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-[#1C1C24] border border-white/10 text-white text-sm placeholder:text-zinc-500 outline-none focus:border-rose-500 transition-colors"
                 minLength={8}
                 required
@@ -156,12 +165,12 @@ export const AuthView: React.FC = () => {
             disabled={submitting}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:opacity-60 text-white font-bold text-sm shadow-lg shadow-rose-600/30 transition-all"
           >
-            {submitting ? '처리 중...' : mode === 'login' ? '로그인' : '회원가입 완료'}
+            {submitting ? t('auth_processing') : mode === 'login' ? t('auth_login_button') : t('auth_signup_button')}
           </button>
         </form>
 
         <p className="text-center text-[11px] text-zinc-500 leading-relaxed">
-          가입 시 DramaBox 서비스 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.
+          {t('auth_terms')}
         </p>
       </div>
     </div>

@@ -5,21 +5,21 @@ import { MainTabType } from '../types';
 
 interface NavItem {
   id: MainTabType;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   hasBadge?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'home', label: '홈', icon: Home },
-  { id: 'reels', label: '추천', icon: PlaySquare },
-  { id: 'membership', label: '멤버십', icon: Sparkles },
-  { id: 'storage', label: '보관함', icon: Bookmark },
-  { id: 'mypage', label: '마이', icon: User, hasBadge: true },
+  { id: 'home', labelKey: 'nav_home', icon: Home },
+  { id: 'reels', labelKey: 'nav_reels', icon: PlaySquare },
+  { id: 'membership', labelKey: 'nav_membership', icon: Sparkles },
+  { id: 'storage', labelKey: 'nav_storage', icon: Bookmark },
+  { id: 'mypage', labelKey: 'nav_mypage', icon: User, hasBadge: true },
 ];
 
 export const BottomNav: React.FC = () => {
-  const { activeTab, setActiveTab, userProfile } = useApp();
+  const { activeTab, setActiveTab, userProfile, t } = useApp();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#101014]/95 backdrop-blur-lg border-t border-white/5 py-1.5 px-3 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto select-none">
@@ -53,7 +53,7 @@ export const BottomNav: React.FC = () => {
                   isActive ? 'font-bold text-white' : 'font-medium text-zinc-400'
                 }`}
               >
-                {item.label}
+                {t(item.labelKey)}
               </span>
             </button>
           );

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useRef 
 import { Drama, MainTabType, HomeCategoryType, UserProfile, WatchHistoryItem, UserReview, RecommendationResult, AuthUser, AdSlot } from '../types';
 import { fetchLatestDramas, fetchRealEpisodes } from '../services/api';
 import { INITIAL_DRAMAS } from '../data/dramas';
+import { LanguageCode, DEFAULT_LANGUAGE, translate } from '../i18n/translations';
 
 export interface AppProfilePreset {
   id: string;
@@ -175,6 +176,11 @@ interface AppContextType {
   deleteDrama: (bookId: string) => void;
   ageVerified: boolean;
   verifyAge: () => void;
+  language: LanguageCode;
+  setLanguage: (lang: LanguageCode) => void;
+  t: (key: string) => string;
+  languageModalOpen: boolean;
+  setLanguageModalOpen: (open: boolean) => void;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -250,6 +256,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setActiveTabState(tab);
   };
+  const [language, setLanguageState] = useState<LanguageCode>(() => {
+    try {
+      const saved = localStorage.getItem('dramabox_language');
+      return (saved as LanguageCode) || DEFAULT_LANGUAGE;
+    } catch {
+      return DEFAULT_LANGUAGE;
+    }
+  });
+  const [languageModalOpen, setLanguageModalOpen] = useState<boolean>(false);
+
+  const setLanguage = (lang: LanguageCode) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem('dramabox_language', lang);
+    } catch (e) {
+      console.warn('Storage save failed', e);
+    }
+  };
+
+  const t = (key: string) => translate(language, key);
+
   const [homeCategory, setHomeCategory] = useState<HomeCategoryType>('추천');
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [selectedLanguageFilter, setSelectedLanguageFilter] = useState<string | null>(null);
@@ -572,7 +599,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshDramas = async () => {
     setIsLoading(true);
     try {
-      const loaded = applyDramaOverrides(await fetchLatestDramas(), dramaOverridesRef.current);
+      const loaded = applyDramaOverrides(await fetchLatestDramas(language), dramaOverridesRef.current);
       setDramas(loaded);
       if (!activePlayerDrama && loaded.length > 0) {
         setActivePlayerDrama(loaded[0]);
@@ -584,19 +611,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Re-fetches the whole catalog (in the newly selected locale) whenever
+  // the language changes, in addition to the initial mount load.
   useEffect(() => {
     refreshDramas();
-  }, []);
+  }, [language]);
 
   // Loads the real DramaBox episode list (with playable mp4 URLs for
   // unlocked episodes) for a drama the first time it's opened/played,
   // and merges it into that drama's `episodes` field.
   const realEpisodesRequested = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    realEpisodesRequested.current.clear();
+  }, [language]);
   const ensureRealEpisodes = (bookId: string) => {
     if (realEpisodesRequested.current.has(bookId)) return;
     realEpisodesRequested.current.add(bookId);
 
-    fetchRealEpisodes(bookId).then(realEpisodes => {
+    fetchRealEpisodes(bookId, language).then(realEpisodes => {
       if (!realEpisodes) return;
       setDramas(prev => prev.map(d => (d.bookId === bookId ? { ...d, episodes: realEpisodes } : d)));
       setActivePlayerDrama(prev => (prev && prev.bookId === bookId ? { ...prev, episodes: realEpisodes } : prev));
@@ -1154,6 +1186,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteDrama,
         ageVerified,
         verifyAge,
+        language,
+        setLanguage,
+        t,
+        languageModalOpen,
+        setLanguageModalOpen,
       }}
     >
       {children}

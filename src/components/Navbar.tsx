@@ -1,9 +1,19 @@
 import React from 'react';
-import { Search, Crown, Gift } from 'lucide-react';
+import { Search, Crown, Gift, Globe } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { HomeCategoryType } from '../types';
 
 const BASE_CATEGORIES: HomeCategoryType[] = ['추천', '신작', '인기 순위', '분류'];
+
+// Display labels are translated via t(); the underlying category values stay
+// in Korean since HomeView's filtering logic compares against them directly.
+const CATEGORY_LABEL_KEYS: Record<HomeCategoryType, string> = {
+  '추천': 'cat_recommend',
+  '신작': 'cat_new',
+  '인기 순위': 'cat_ranking',
+  '분류': 'cat_classify',
+  '성인': 'cat_adult',
+};
 
 export const Navbar: React.FC = () => {
   const {
@@ -13,7 +23,9 @@ export const Navbar: React.FC = () => {
     setActiveTab,
     claimDailyCheckIn,
     userProfile,
-    dramas
+    dramas,
+    t,
+    setLanguageModalOpen
   } = useApp();
 
   const randomPlaceholder = dramas.length > 0
@@ -38,6 +50,16 @@ export const Navbar: React.FC = () => {
           <span className="text-sm text-zinc-400 truncate font-normal">
             {randomPlaceholder}
           </span>
+        </button>
+
+        {/* Language Selector Button */}
+        <button
+          id="btn-nav-language"
+          onClick={() => setLanguageModalOpen(true)}
+          className="relative p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 transition-all hover:scale-105 active:scale-95 shrink-0"
+          title={t('common_language')}
+        >
+          <Globe className="w-5 h-5" />
         </button>
 
         {/* Crown VIP Button */}
@@ -93,7 +115,7 @@ export const Navbar: React.FC = () => {
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              {category}
+              {t(CATEGORY_LABEL_KEYS[category])}
               {category === '성인' && (
                 <span className="px-1 py-0.5 rounded text-[9px] font-black bg-red-500 text-white leading-none">
                   19

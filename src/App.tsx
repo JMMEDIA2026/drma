@@ -13,12 +13,18 @@ import { ShareModal } from './components/ShareModal';
 import { RatingModal } from './components/RatingModal';
 import { AuthView } from './components/AuthView';
 import { AdminView } from './components/AdminView';
+import { LanguageModal } from './components/LanguageModal';
 
 const MainContent: React.FC = () => {
   const { activeTab, toastMessage, isAuthenticated } = useApp();
 
   if (!isAuthenticated) {
-    return <AuthView />;
+    return (
+      <>
+        <AuthView />
+        <LanguageModal />
+      </>
+    );
   }
 
   return (
@@ -44,6 +50,7 @@ const MainContent: React.FC = () => {
       <ShareModal />
       <RatingModal />
       <AdminView />
+      <LanguageModal />
 
       {/* Toast Notification Alert */}
       {toastMessage && (

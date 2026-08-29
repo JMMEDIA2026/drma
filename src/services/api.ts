@@ -1,9 +1,9 @@
 import { Drama, Episode } from '../types';
 import { INITIAL_DRAMAS, generateEpisodes } from '../data/dramas';
 
-export async function fetchLatestDramas(): Promise<Drama[]> {
+export async function fetchLatestDramas(locale: string = 'ko'): Promise<Drama[]> {
   try {
-    const response = await fetch('/api/proxy/dramabox/home?locale=ko');
+    const response = await fetch(`/api/proxy/dramabox/home?locale=${encodeURIComponent(locale)}`);
     if (response.ok) {
       const result = await response.json();
       const rawData = result.data || result;
@@ -45,7 +45,7 @@ export async function fetchLatestDramas(): Promise<Drama[]> {
   }
 
   try {
-    const response = await fetch('/api/dramabox/latest?lang=ko');
+    const response = await fetch(`/api/dramabox/latest?lang=${encodeURIComponent(locale)}`);
     if (response.ok) {
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
@@ -75,9 +75,9 @@ export async function fetchDramaCategories(id?: string, page?: number): Promise<
   return null;
 }
 
-export async function fetchDramaDetailApi(bookId: string): Promise<any> {
+export async function fetchDramaDetailApi(bookId: string, locale: string = 'ko'): Promise<any> {
   try {
-    const res = await fetch(`/api/proxy/dramabox/detail?id=${encodeURIComponent(bookId)}&locale=ko`);
+    const res = await fetch(`/api/proxy/dramabox/detail?id=${encodeURIComponent(bookId)}&locale=${encodeURIComponent(locale)}`);
     if (res.ok) {
       return await res.json();
     }
@@ -99,8 +99,8 @@ function formatDuration(ms: number): string {
 // unlocked episodes) for a given bookId and maps it onto our Episode shape.
 // Returns null if the drama isn't available on the live DramaBox catalog
 // (e.g. a curated/mock bookId), so callers can keep the existing fallback data.
-export async function fetchRealEpisodes(bookId: string): Promise<Episode[] | null> {
-  const detail = await fetchDramaDetailApi(bookId);
+export async function fetchRealEpisodes(bookId: string, locale: string = 'ko'): Promise<Episode[] | null> {
+  const detail = await fetchDramaDetailApi(bookId, locale);
   if (!detail?.success || !Array.isArray(detail.episodes) || detail.episodes.length === 0) {
     return null;
   }
