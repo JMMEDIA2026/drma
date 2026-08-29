@@ -69,6 +69,19 @@ function saveAccounts(accounts: StoredAccount[]) {
   }
 }
 
+type DramaOverrideMap = Record<string, { badge?: Drama['badge'] | null; deleted?: boolean }>;
+
+function applyDramaOverrides(list: Drama[], overrides: DramaOverrideMap): Drama[] {
+  if (!overrides || Object.keys(overrides).length === 0) return list;
+  return list
+    .filter(d => !overrides[d.bookId]?.deleted)
+    .map(d => {
+      const override = overrides[d.bookId];
+      if (!override || override.badge === undefined) return d;
+      return { ...d, badge: override.badge ?? undefined };
+    });
+}
+
 const DEFAULT_AD_SLOTS: AdSlot[] = [
   {
     id: 'ad_slot_1',
@@ -404,8 +417,93 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [adSlots]);
 
+  // Shared admin config (ad slots, drama badge/delete overrides) synced through
+  // /api/admin/settings (Postgres-backed) so every visitor sees the same
+  // state instead of each browser having its own localStorage copy. Falls
+  // back to local-only behavior when the API/DB isn't reachable.
+  const [dramaOverrides, setDramaOverrides] = useState<DramaOverrideMap>(() => {
+    try {
+      const saved = localStorage.getItem('dramabox_drama_overrides');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const dramaOverridesRef = useRef<DramaOverrideMap>(dramaOverrides);
+  useEffect(() => {
+    dramaOverridesRef.current = dramaOverrides;
+    try {
+      localStorage.setItem('dramabox_drama_overrides', JSON.stringify(dramaOverrides));
+    } catch (e) {
+      console.warn('Storage save failed', e);
+    }
+  }, [dramaOverrides]);
+
+  const getStoredAdminSecret = (): string | null => {
+    try {
+      return localStorage.getItem('dramabox_admin_secret');
+    } catch {
+      return null;
+    }
+  };
+
+  const postAdminSettings = async (body: { adSlots?: AdSlot[]; dramaOverrides?: DramaOverrideMap }) => {
+    let secret = getStoredAdminSecret();
+    if (!secret) {
+      secret = window.prompt('관리자 비밀키를 입력하세요 (Vercel 환경변수 ADMIN_API_SECRET과 동일해야 합니다):');
+      if (!secret) return;
+      try {
+        localStorage.setItem('dramabox_admin_secret', secret);
+      } catch (e) {}
+    }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': secret },
+        body: JSON.stringify(body),
+      });
+      if (res.status === 401) {
+        try {
+          localStorage.removeItem('dramabox_admin_secret');
+        } catch (e) {}
+        showToast('관리자 비밀키가 올바르지 않습니다. 다시 시도해주세요.');
+        return;
+      }
+      if (!res.ok) {
+        showToast('서버 저장에 실패했습니다 (이 브라우저에만 반영됨).');
+      }
+    } catch (e) {
+      showToast('서버에 연결할 수 없습니다 (이 브라우저에만 반영됨).');
+    }
+  };
+
+  // Load shared admin settings from the server once on mount, layering them
+  // over whatever local/default state we already have.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.adSlots) {
+          setAdSlots(data.adSlots);
+        }
+        if (data.dramaOverrides) {
+          setDramaOverrides(data.dramaOverrides);
+          setDramas(prev => applyDramaOverrides(prev, data.dramaOverrides));
+        }
+      } catch (e) {
+        // No DB configured yet, or offline — keep local/default state.
+      }
+    })();
+  }, []);
+
   const updateAdSlot = (id: string, changes: Partial<AdSlot>) => {
-    setAdSlots(prev => prev.map(slot => (slot.id === id ? { ...slot, ...changes } : slot)));
+    setAdSlots(prev => {
+      const next = prev.map(slot => (slot.id === id ? { ...slot, ...changes } : slot));
+      postAdminSettings({ adSlots: next });
+      return next;
+    });
   };
 
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
@@ -420,10 +518,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateDrama = (bookId: string, changes: Partial<Drama>) => {
     setDramas(prev => prev.map(d => (d.bookId === bookId ? { ...d, ...changes } : d)));
+    if ('badge' in changes) {
+      setDramaOverrides(prev => {
+        const next = { ...prev, [bookId]: { ...prev[bookId], badge: changes.badge ?? null } };
+        postAdminSettings({ dramaOverrides: next });
+        return next;
+      });
+    }
   };
 
   const deleteDrama = (bookId: string) => {
     setDramas(prev => prev.filter(d => d.bookId !== bookId));
+    setDramaOverrides(prev => {
+      const next = { ...prev, [bookId]: { ...prev[bookId], deleted: true } };
+      postAdminSettings({ dramaOverrides: next });
+      return next;
+    });
     showToast('영상이 삭제되었습니다.');
   };
 
@@ -462,7 +572,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshDramas = async () => {
     setIsLoading(true);
     try {
-      const loaded = await fetchLatestDramas();
+      const loaded = applyDramaOverrides(await fetchLatestDramas(), dramaOverridesRef.current);
       setDramas(loaded);
       if (!activePlayerDrama && loaded.length > 0) {
         setActivePlayerDrama(loaded[0]);
