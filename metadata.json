@@ -1,0 +1,6 @@
+{
+  "name": "DramaBox K-Drama Streaming",
+  "description": "DramaBox 최신 K-드라마 스트리밍 플랫폼. 숏폼 세로형 플레이어, 카테고리별 추천/신작/인기순위 탐색, 회차 보기 및 보관함과 마이페이지 제공.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
