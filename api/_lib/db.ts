@@ -1,17 +1,20 @@
-import { Pool } from 'pg';
+import { MongoClient, Db } from 'mongodb';
 
-// Reused across warm serverless invocations. Works with the connection
-// string Vercel injects when a Postgres (Neon) database is attached to the
-// project via the Storage tab — POSTGRES_URL, falling back to DATABASE_URL.
-let pool: Pool | null = null;
+// Reused across warm serverless invocations.
+let clientPromise: Promise<MongoClient> | null = null;
 
-export function getPool(): Pool {
-  const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('No database connection string found (POSTGRES_URL / DATABASE_URL).');
+function getMongoClient(): Promise<MongoClient> {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI is not set.');
   }
-  if (!pool) {
-    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+  if (!clientPromise) {
+    clientPromise = new MongoClient(uri).connect();
   }
-  return pool;
+  return clientPromise;
+}
+
+export async function getDb(): Promise<Db> {
+  const client = await getMongoClient();
+  return client.db('dramabox');
 }

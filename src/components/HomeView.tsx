@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Play, Flame, ChevronRight, Sparkles, TrendingUp, Filter, Trash2, Globe, ShieldAlert } from 'lucide-react';
+import { Play, Flame, ChevronRight, Sparkles, TrendingUp, Filter, Trash2, Globe, ShieldAlert, Calendar } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
 import { BENTO_COLLECTIONS } from '../data/dramas';
 import { AdBanner } from './AdBanner';
+import { getGenreTheme, getDramaYear } from '../data/genreStyles';
 
 const TAG_FILTERS = [
   '전체',
@@ -544,13 +545,34 @@ export const HomeView: React.FC = () => {
               </div>
 
               {/* Drama Details Below Poster */}
-              <div className="mt-1.5 space-y-0.5">
+              <div className="mt-1.5 space-y-1">
                 <h4 className="text-xs sm:text-sm font-semibold text-zinc-100 line-clamp-1 group-hover:text-rose-400 transition-colors">
                   {drama.bookName}
                 </h4>
-                <p className="text-[11px] text-zinc-400 truncate">
-                  {drama.tagNames[0] || drama.genre}
-                </p>
+
+                {/* Mini genre + year tags — icon/color-coded per genre for quick scanning */}
+                {(() => {
+                  const genreTag = drama.tagNames[0] || drama.genre;
+                  const theme = getGenreTheme(genreTag);
+                  const GenreIcon = theme.icon;
+                  const year = getDramaYear(drama);
+                  return (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span
+                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold border ${theme.bg} ${theme.text} ${theme.border}`}
+                      >
+                        <GenreIcon className="w-2.5 h-2.5 shrink-0" />
+                        <span className="truncate max-w-[64px]">{genreTag}</span>
+                      </span>
+                      {year && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-white/5 text-zinc-400 border border-white/10">
+                          <Calendar className="w-2.5 h-2.5" />
+                          {year}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           ))}

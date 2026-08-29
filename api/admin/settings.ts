@@ -1,35 +1,25 @@
-import { getPool } from '../_lib/db';
-
-let tableReady = false;
-
-async function ensureTable(pool: ReturnType<typeof getPool>) {
-  if (tableReady) return;
-  await pool.query('CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value JSONB NOT NULL)');
-  tableReady = true;
-}
+import { getDb } from '../_lib/db';
 
 // Shared admin config (ad slots, drama badge/delete overrides) stored in
-// Postgres so every visitor sees the same state, instead of each browser's
+// MongoDB so every visitor sees the same state, instead of each browser's
 // own localStorage. Reads are public; writes require the ADMIN_API_SECRET
 // header so random visitors can't overwrite it.
 export default async function handler(req: any, res: any) {
-  let pool: ReturnType<typeof getPool>;
+  let collection;
   try {
-    pool = getPool();
-    await ensureTable(pool);
+    const db = await getDb();
+    collection = db.collection('app_settings');
   } catch (err: any) {
     return res.status(500).json({ error: 'db_unavailable', message: err.message });
   }
 
   try {
     if (req.method === 'GET') {
-      const { rows } = await pool.query(
-        "SELECT key, value FROM app_settings WHERE key IN ('ad_slots', 'drama_overrides')"
-      );
+      const docs = await collection.find({ _id: { $in: ['ad_slots', 'drama_overrides'] as any } }).toArray();
       const result: { adSlots: any; dramaOverrides: any } = { adSlots: null, dramaOverrides: {} };
-      for (const row of rows) {
-        if (row.key === 'ad_slots') result.adSlots = row.value;
-        if (row.key === 'drama_overrides') result.dramaOverrides = row.value;
+      for (const doc of docs) {
+        if (doc._id === 'ad_slots') result.adSlots = doc.value;
+        if (doc._id === 'drama_overrides') result.dramaOverrides = doc.value;
       }
       return res.status(200).json(result);
     }
@@ -44,17 +34,17 @@ export default async function handler(req: any, res: any) {
       const { adSlots, dramaOverrides } = req.body || {};
 
       if (adSlots !== undefined) {
-        await pool.query(
-          `INSERT INTO app_settings (key, value) VALUES ('ad_slots', $1::jsonb)
-           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
-          [JSON.stringify(adSlots)]
+        await collection.updateOne(
+          { _id: 'ad_slots' as any },
+          { $set: { value: adSlots } },
+          { upsert: true }
         );
       }
       if (dramaOverrides !== undefined) {
-        await pool.query(
-          `INSERT INTO app_settings (key, value) VALUES ('drama_overrides', $1::jsonb)
-           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
-          [JSON.stringify(dramaOverrides)]
+        await collection.updateOne(
+          { _id: 'drama_overrides' as any },
+          { $set: { value: dramaOverrides } },
+          { upsert: true }
         );
       }
       return res.status(200).json({ success: true });
