@@ -288,7 +288,7 @@ export const DramaDetailSheet: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#181820] p-3 rounded-xl border border-white/5">
                   <div className="flex justify-between py-1 border-b border-white/5">
                     <span className="text-zinc-400">감독 (Director)</span>
-                    <span className="font-semibold text-white">{selectedDrama.director || 'DramaBox 메인 연출팀'}</span>
+                    <span className="font-semibold text-white">{selectedDrama.director || 'JmBox 메인 연출팀'}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-white/5">
                     <span className="text-zinc-400">제작사 (Production)</span>

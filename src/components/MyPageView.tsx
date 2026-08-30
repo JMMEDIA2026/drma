@@ -915,7 +915,7 @@ export const MyPageView: React.FC = () => {
 
             {/* Terms */}
             <div
-              onClick={() => showToast('DramaBox 서비스 이용약관 및 개인정보 처리방침 안내')}
+              onClick={() => showToast('JmBox 서비스 이용약관 및 개인정보 처리방침 안내')}
               className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors"
             >
               <div className="flex items-center gap-3">
@@ -947,7 +947,7 @@ export const MyPageView: React.FC = () => {
             <div className="p-4 flex items-center justify-between text-xs text-zinc-400">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-emerald-400" />
-                <span>DramaBox K-Drama Streaming v2.8.0</span>
+                <span>JmBox K-Drama Streaming v2.8.0</span>
               </div>
               <span className="text-emerald-400 font-semibold">최신 버전 이용 중</span>
             </div>
