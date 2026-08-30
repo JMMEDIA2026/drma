@@ -1,7 +1,8 @@
 import React from 'react';
-import { Search, Crown, Gift, Globe } from 'lucide-react';
+import { Search, Crown, Gift } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { HomeCategoryType } from '../types';
+import { LANGUAGES } from '../i18n/translations';
 
 const BASE_CATEGORIES: HomeCategoryType[] = ['추천', '신작', '인기 순위', '분류'];
 
@@ -25,8 +26,11 @@ export const Navbar: React.FC = () => {
     userProfile,
     dramas,
     t,
+    language,
     setLanguageModalOpen
   } = useApp();
+
+  const currentLanguage = LANGUAGES.find(lng => lng.code === language) ?? LANGUAGES[0];
 
   const randomPlaceholder = dramas.length > 0
     ? dramas[0].bookName
@@ -56,10 +60,14 @@ export const Navbar: React.FC = () => {
         <button
           id="btn-nav-language"
           onClick={() => setLanguageModalOpen(true)}
-          className="relative p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 transition-all hover:scale-105 active:scale-95 shrink-0"
+          className="relative rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:scale-105 active:scale-95 shrink-0 overflow-hidden w-9 h-9 flex items-center justify-center"
           title={t('common_language')}
         >
-          <Globe className="w-5 h-5" />
+          <img
+            src={`https://flagcdn.com/${currentLanguage.flag}.svg`}
+            alt={currentLanguage.native}
+            className="w-6 h-6 rounded-full object-cover"
+          />
         </button>
 
         {/* Crown VIP Button */}
