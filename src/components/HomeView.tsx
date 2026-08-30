@@ -415,7 +415,7 @@ export const HomeView: React.FC = () => {
                       <div
                         id={`bento-item-${item.bookId}`}
                         key={item.bookId}
-                        onClick={() => openDramaDetail(item)}
+                        onClick={() => playDrama(item)}
                         className="flex items-center gap-3 p-2 rounded-xl bg-black/20 hover:bg-black/40 border border-white/5 cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] group"
                       >
                         <div className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-zinc-800">
@@ -513,7 +513,7 @@ export const HomeView: React.FC = () => {
             <div
               id={`card-drama-${drama.bookId}`}
               key={drama.bookId}
-              onClick={() => openDramaDetail(drama)}
+              onClick={() => playDrama(drama)}
               className="group cursor-pointer flex flex-col select-none transition-transform hover:-translate-y-1 active:scale-95"
             >
               {/* Poster Image Container */}
