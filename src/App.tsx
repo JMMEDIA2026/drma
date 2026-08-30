@@ -48,15 +48,17 @@ const MainContent: React.FC = () => {
       {/* Login/signup overlay — opened on demand (e.g. from 보관함/마이페이지
           for guests) instead of blocking the whole app before auth */}
       {authViewOpen && (
-        <div className="fixed inset-0 z-[70] overflow-y-auto bg-[#101014]">
-          <button
-            id="btn-close-auth-view"
-            onClick={() => setAuthViewOpen(false)}
-            className="absolute top-4 left-4 z-10 p-2.5 rounded-full bg-[#1C1C24] hover:bg-[#23232D] border border-white/10 text-zinc-300 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          <AuthView />
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="relative w-full max-w-sm bg-[#161620] rounded-3xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button
+              id="btn-close-auth-view"
+              onClick={() => setAuthViewOpen(false)}
+              className="absolute top-3.5 left-3.5 z-10 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-zinc-300 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <AuthView />
+          </div>
         </div>
       )}
 

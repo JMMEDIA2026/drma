@@ -52,17 +52,17 @@ export const AuthView: React.FC = () => {
   const error = localError || authError;
 
   return (
-    <div className="min-h-screen bg-[#101014] text-zinc-100 flex flex-col items-center justify-center px-6 py-10 font-sans relative">
+    <div className="text-zinc-100 px-6 py-8 font-sans relative">
       <button
         id="btn-auth-language"
         onClick={() => setLanguageModalOpen(true)}
-        className="absolute top-4 right-4 p-2.5 rounded-full bg-[#1C1C24] hover:bg-[#23232D] border border-white/10 text-zinc-300 transition-colors"
+        className="absolute top-3.5 right-3.5 p-2 rounded-full bg-[#1C1C24] hover:bg-[#23232D] border border-white/10 text-zinc-300 transition-colors"
         title={t('common_language')}
       >
         <Globe className="w-4 h-4" />
       </button>
 
-      <div className="w-full max-w-sm space-y-7">
+      <div className="w-full space-y-6 pt-2">
         {/* Brand */}
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-600/30">
