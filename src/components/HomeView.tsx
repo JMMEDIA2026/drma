@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
 import { BENTO_COLLECTIONS } from '../data/dramas';
 import { AdBanner } from './AdBanner';
+import { HorizontalAdBanner } from './HorizontalAdBanner';
 import { getGenreTheme, getDramaYear } from '../data/genreStyles';
 import { DRAMA_CATEGORIES } from '../data/categories';
 import { fetchDramasByCategory } from '../services/api';
@@ -371,8 +372,8 @@ export const HomeView: React.FC = () => {
       {homeCategory === '추천' && (
         <div className="space-y-4">
           {BENTO_COLLECTIONS.map((bento) => {
-            const featured = dramas.find(d => d.bookId === bento.featuredDramaId) || dramas[0];
             const listItems = dramas.filter(d => bento.itemIds.includes(d.bookId));
+            const bentoAdSlots = adSlots.filter(s => s.id.startsWith('ad_slot_bento_'));
 
             const isWine = bento.theme === 'wine';
             const bgGradient = isWine
@@ -442,43 +443,18 @@ export const HomeView: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Right Column: Large Featured Poster Card */}
-                  {featured && (
-                    <div
-                      id={`bento-featured-${featured.bookId}`}
-                      onClick={() => openDramaDetail(featured)}
-                      className="md:col-span-6 relative rounded-xl overflow-hidden bg-black/30 border border-white/10 group cursor-pointer aspect-[16/10] md:aspect-auto flex flex-col justify-end p-3.5"
-                    >
-                      <img
-                        src={featured.cover}
-                        alt={featured.bookName}
-                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                      {/* Overlays */}
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
-                          {featured.tagNames.slice(0, 2).map((t, idx) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-black/60 text-zinc-200 border border-white/10"
-                            >
-                              {t} &gt;
-                            </span>
-                          ))}
-                          <span className="text-[11px] font-bold text-amber-300 ml-auto flex items-center gap-0.5">
-                            <Play className="w-3 h-3 fill-amber-300" />
-                            {featured.hotCode}
-                          </span>
-                        </div>
-
-                        <h4 className="text-sm sm:text-base font-bold text-white line-clamp-1 group-hover:text-rose-300 transition-colors">
-                          {featured.bookName}
-                        </h4>
-                      </div>
-                    </div>
-                  )}
+                  {/* Right Column: Dual horizontal ad banners */}
+                  <div className="md:col-span-6 grid grid-cols-2 gap-2 min-h-[200px] md:min-h-0 md:h-full">
+                    {bentoAdSlots.length > 0 ? (
+                      bentoAdSlots.map(slot => (
+                        <HorizontalAdBanner key={slot.id} slot={slot} />
+                      ))
+                    ) : (
+                      adSlots.slice(0, 2).map(slot => (
+                        <HorizontalAdBanner key={slot.id} slot={slot} />
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             );
@@ -541,7 +517,8 @@ export const HomeView: React.FC = () => {
               className="group cursor-pointer flex flex-col select-none transition-transform hover:-translate-y-1 active:scale-95"
             >
               {/* Poster Image Container */}
-              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1C1C24] border border-white/5 shadow-md">
+              <div className="thumbnail-neon-wrap shadow-md">
+                <div className="thumbnail-neon-inner relative aspect-[3/4]">
                 <img
                   src={drama.cover}
                   alt={drama.bookName}
@@ -588,6 +565,7 @@ export const HomeView: React.FC = () => {
                 <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium flex items-center gap-0.5">
                   <Play className="w-2.5 h-2.5 fill-white" />
                   <span>{drama.hotCode}</span>
+                </div>
                 </div>
               </div>
 

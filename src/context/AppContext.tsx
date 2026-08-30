@@ -3,6 +3,14 @@ import { Drama, MainTabType, HomeCategoryType, UserProfile, WatchHistoryItem, Us
 import { fetchLatestDramas, fetchRealEpisodes } from '../services/api';
 import { INITIAL_DRAMAS } from '../data/dramas';
 import { LanguageCode, DEFAULT_LANGUAGE, translate } from '../i18n/translations';
+import {
+  clampMemberGrade,
+  getMemberGradeInfo,
+  isSuperAdminEmail,
+  isSuperAdminGrade,
+  MemberGrade,
+  SUPER_ADMIN_EMAIL,
+} from '../data/memberGrades';
 
 export interface AppProfilePreset {
   id: string;
@@ -45,6 +53,8 @@ interface StoredAccount {
   email: string;
   passwordHash: string;
   nickname: string;
+  memberGrade: MemberGrade;
+  isSuperAdmin?: boolean;
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -56,7 +66,14 @@ async function hashPassword(password: string): Promise<string> {
 function loadAccounts(): StoredAccount[] {
   try {
     const saved = localStorage.getItem('dramabox_accounts');
-    return saved ? JSON.parse(saved) : [];
+    const accounts: StoredAccount[] = saved ? JSON.parse(saved) : [];
+    return accounts.map(a => ({
+      ...a,
+      memberGrade: clampMemberGrade(
+        a.memberGrade ?? (isSuperAdminEmail(a.email) ? 7 : 1)
+      ),
+      isSuperAdmin: a.isSuperAdmin || isSuperAdminEmail(a.email),
+    }));
   } catch {
     return [];
   }
@@ -68,6 +85,22 @@ function saveAccounts(accounts: StoredAccount[]) {
   } catch (e) {
     console.warn('Storage save failed', e);
   }
+}
+
+function applyGradeToProfile(profile: UserProfile, grade: MemberGrade): UserProfile {
+  const gradeInfo = getMemberGradeInfo(grade);
+  const isAdmin = isSuperAdminGrade(grade);
+
+  return {
+    ...profile,
+    memberGrade: grade,
+    isVip: gradeInfo.isVip,
+    vipTier: isAdmin ? '평생회원' : grade >= 6 ? 'VIP' : '일반',
+    isLifetime: isAdmin,
+    vipExpiryDate: isAdmin ? undefined : grade >= 6 ? '2027.12.31' : profile.vipExpiryDate,
+    coins: isAdmin ? Math.max(profile.coins, 99999) : profile.coins,
+    bonusPoints: isAdmin ? Math.max(profile.bonusPoints, 99999) : profile.bonusPoints,
+  };
 }
 
 type DramaOverrideMap = Record<string, { badge?: Drama['badge'] | null; deleted?: boolean }>;
@@ -99,6 +132,22 @@ const DEFAULT_AD_SLOTS: AdSlot[] = [
     subtitle: '전편 무제한 · 광고 없는 몰입 시청',
     imageUrl: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?q=80&w=600&auto=format&fit=crop',
     linkLabel: '멤버십 보기',
+  },
+  {
+    id: 'ad_slot_bento_1',
+    enabled: true,
+    title: '신규 가입 코인 1000개',
+    subtitle: '지금 가입하면 웰컴 보너스 즉시 지급',
+    imageUrl: 'https://images.unsplash.com/photo-1611162616475-46b635cb6868?q=80&w=800&auto=format&fit=crop',
+    linkLabel: '혜택 받기',
+  },
+  {
+    id: 'ad_slot_bento_2',
+    enabled: true,
+    title: '주말 한정 VIP 50% OFF',
+    subtitle: '이번 주말만 특별 할인 · 전편 무제한',
+    imageUrl: 'https://images.unsplash.com/photo-1574267432644-f6102b50d6fa?q=80&w=800&auto=format&fit=crop',
+    linkLabel: '할인 받기',
   },
 ];
 
@@ -164,14 +213,16 @@ interface AppContextType {
   isAuthenticated: boolean;
   authError: string | null;
   signup: (email: string, password: string, nickname: string) => Promise<boolean>;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
   adSlots: AdSlot[];
   updateAdSlot: (id: string, changes: Partial<AdSlot>) => void;
   adminPanelOpen: boolean;
   setAdminPanelOpen: (open: boolean) => void;
-  listAccounts: () => { email: string; nickname: string }[];
+  listAccounts: () => { email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin?: boolean }[];
   deleteAccount: (email: string) => void;
+  updateAccountGrade: (email: string, grade: MemberGrade) => void;
+  isSuperAdmin: boolean;
   updateDrama: (bookId: string, changes: Partial<Drama>) => void;
   deleteDrama: (bookId: string) => void;
   ageVerified: boolean;
@@ -187,6 +238,7 @@ const DEFAULT_USER: UserProfile = {
   id: 'user_k',
   nickname: '드라마러버_K',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+  memberGrade: 1,
   isVip: true,
   vipTier: 'VIP',
   vipExpiryDate: '2026.12.31',
@@ -332,6 +384,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           ...DEFAULT_USER,
           ...parsed,
+          memberGrade: clampMemberGrade(parsed.memberGrade ?? DEFAULT_USER.memberGrade),
           preferredGenres: parsed.preferredGenres || DEFAULT_USER.preferredGenres,
           likedDramas: parsed.likedDramas || DEFAULT_USER.likedDramas,
           dislikedDramas: parsed.dislikedDramas || [],
@@ -344,22 +397,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const authRememberMeRef = useRef(true);
+
   const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
     try {
-      const saved = localStorage.getItem('dramabox_auth_user');
-      return saved ? JSON.parse(saved) : null;
+      const saved =
+        localStorage.getItem('dramabox_auth_user') ||
+        sessionStorage.getItem('dramabox_auth_session');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved) as AuthUser;
+      const memberGrade = clampMemberGrade(
+        parsed.memberGrade ?? (isSuperAdminEmail(parsed.email) ? 7 : 1)
+      );
+      return {
+        ...parsed,
+        memberGrade,
+        isSuperAdmin: parsed.isSuperAdmin || isSuperAdminGrade(memberGrade),
+      };
     } catch {
       return null;
     }
   });
   const [authError, setAuthError] = useState<string | null>(null);
 
+  const isSuperAdmin =
+    authUser?.isSuperAdmin === true ||
+    (authUser?.memberGrade === 7 && !!authUser?.email && isSuperAdminEmail(authUser.email));
+
   useEffect(() => {
     try {
+      localStorage.removeItem('dramabox_auth_user');
+      sessionStorage.removeItem('dramabox_auth_session');
       if (authUser) {
-        localStorage.setItem('dramabox_auth_user', JSON.stringify(authUser));
-      } else {
-        localStorage.removeItem('dramabox_auth_user');
+        if (authRememberMeRef.current) {
+          localStorage.setItem('dramabox_auth_user', JSON.stringify(authUser));
+        } else {
+          sessionStorage.setItem('dramabox_auth_session', JSON.stringify(authUser));
+        }
       }
     } catch (e) {
       console.warn('Storage save failed', e);
@@ -390,16 +464,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const passwordHash = await hashPassword(password);
-    accounts.push({ email: normalizedEmail, passwordHash, nickname: nickname.trim() });
+    const grade: MemberGrade = isSuperAdminEmail(normalizedEmail) ? 7 : 1;
+    const accountIsSuperAdmin = isSuperAdminEmail(normalizedEmail);
+    accounts.push({
+      email: normalizedEmail,
+      passwordHash,
+      nickname: nickname.trim(),
+      memberGrade: grade,
+      isSuperAdmin: accountIsSuperAdmin,
+    });
     saveAccounts(accounts);
 
-    setUserProfile(prev => ({ ...prev, nickname: nickname.trim() }));
-    setAuthUser({ email: normalizedEmail, nickname: nickname.trim() });
-    showToast(`${nickname.trim()}님, 회원가입을 환영합니다! 🎉`);
+    setUserProfile(prev => applyGradeToProfile({ ...prev, nickname: nickname.trim() }, grade));
+    authRememberMeRef.current = true;
+    try {
+      localStorage.setItem('dramabox_auto_login', 'true');
+      localStorage.setItem('dramabox_saved_email', normalizedEmail);
+    } catch (e) {}
+    setAuthUser({ email: normalizedEmail, nickname: nickname.trim(), memberGrade: grade, isSuperAdmin: accountIsSuperAdmin });
+    showToast(
+      accountIsSuperAdmin
+        ? `${nickname.trim()}님, 최고관리자로 가입되었습니다! 👑`
+        : `${nickname.trim()}님, 회원가입을 환영합니다! 🎉`
+    );
     return true;
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, rememberMe = true): Promise<boolean> => {
     setAuthError(null);
     const normalizedEmail = email.trim().toLowerCase();
     const accounts = loadAccounts();
@@ -416,21 +507,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
 
-    setUserProfile(prev => ({ ...prev, nickname: account.nickname }));
-    setAuthUser({ email: account.email, nickname: account.nickname });
-    showToast(`${account.nickname}님, 다시 오신 것을 환영합니다!`);
+    const memberGrade = clampMemberGrade(
+      account.memberGrade ?? (isSuperAdminEmail(normalizedEmail) ? 7 : 1)
+    );
+    const accountIsSuperAdmin = account.isSuperAdmin || isSuperAdminEmail(normalizedEmail);
+
+    authRememberMeRef.current = rememberMe;
+    try {
+      localStorage.setItem('dramabox_auto_login', rememberMe ? 'true' : 'false');
+      if (rememberMe) {
+        localStorage.setItem('dramabox_saved_email', normalizedEmail);
+      } else {
+        localStorage.removeItem('dramabox_saved_email');
+      }
+    } catch (e) {}
+
+    setUserProfile(prev =>
+      applyGradeToProfile({ ...prev, nickname: account.nickname }, memberGrade)
+    );
+    setAuthUser({
+      email: account.email,
+      nickname: account.nickname,
+      memberGrade,
+      isSuperAdmin: accountIsSuperAdmin && memberGrade === 7,
+    });
+    showToast(
+      accountIsSuperAdmin && memberGrade === 7
+        ? `${account.nickname}님, 최고관리자로 로그인되었습니다! 👑`
+        : `${account.nickname}님, 다시 오신 것을 환영합니다!`
+    );
     return true;
   };
 
   const logout = () => {
     setAuthUser(null);
+    try {
+      localStorage.removeItem('dramabox_auth_user');
+      sessionStorage.removeItem('dramabox_auth_session');
+    } catch (e) {}
     showToast('로그아웃 되었습니다.');
   };
+
+function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
+  const base = stored ?? [];
+  const merged = [...base];
+  for (const defaultSlot of DEFAULT_AD_SLOTS) {
+    if (!merged.some(slot => slot.id === defaultSlot.id)) {
+      merged.push(defaultSlot);
+    }
+  }
+  return merged.length > 0 ? merged : DEFAULT_AD_SLOTS;
+}
 
   const [adSlots, setAdSlots] = useState<AdSlot[]>(() => {
     try {
       const saved = localStorage.getItem('dramabox_ad_slots');
-      return saved ? JSON.parse(saved) : DEFAULT_AD_SLOTS;
+      return mergeAdSlots(saved ? JSON.parse(saved) : null);
     } catch {
       return DEFAULT_AD_SLOTS;
     }
@@ -535,12 +667,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
 
-  const listAccounts = () => loadAccounts().map(a => ({ email: a.email, nickname: a.nickname }));
+  const listAccounts = () =>
+    loadAccounts().map(a => ({
+      email: a.email,
+      nickname: a.nickname,
+      memberGrade: clampMemberGrade(
+        a.memberGrade ?? (isSuperAdminEmail(a.email) ? 7 : 1)
+      ),
+      isSuperAdmin: a.isSuperAdmin || isSuperAdminEmail(a.email),
+    }));
 
   const deleteAccount = (email: string) => {
+    if (isSuperAdminEmail(email)) {
+      showToast('최고관리자 계정은 삭제할 수 없습니다.');
+      return;
+    }
     const accounts = loadAccounts().filter(a => a.email !== email);
     saveAccounts(accounts);
     showToast('계정이 삭제되었습니다.');
+  };
+
+  const updateAccountGrade = (email: string, grade: MemberGrade) => {
+    if (!isSuperAdmin) {
+      showToast('등급 변경 권한이 없습니다.');
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const nextGrade = isSuperAdminEmail(normalizedEmail) ? 7 : clampMemberGrade(grade);
+    const accounts = loadAccounts().map(a =>
+      a.email === normalizedEmail
+        ? {
+            ...a,
+            memberGrade: nextGrade,
+            isSuperAdmin: isSuperAdminEmail(normalizedEmail),
+          }
+        : a
+    );
+    saveAccounts(accounts);
+
+    if (authUser?.email === normalizedEmail) {
+      setAuthUser(prev =>
+        prev
+          ? {
+              ...prev,
+              memberGrade: nextGrade,
+              isSuperAdmin: isSuperAdminEmail(normalizedEmail),
+            }
+          : prev
+      );
+      setUserProfile(prev => applyGradeToProfile(prev, nextGrade));
+    }
+
+    showToast(`회원 등급이 ${getMemberGradeInfo(nextGrade).label}(으)로 변경되었습니다.`);
   };
 
   const updateDrama = (bookId: string, changes: Partial<Drama>) => {
@@ -1182,6 +1361,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAdminPanelOpen,
         listAccounts,
         deleteAccount,
+        updateAccountGrade,
+        isSuperAdmin,
         updateDrama,
         deleteDrama,
         ageVerified,

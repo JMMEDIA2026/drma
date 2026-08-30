@@ -79,6 +79,7 @@ export interface UserProfile {
   id: string;
   nickname: string;
   avatar: string;
+  memberGrade: 1 | 2 | 3 | 4 | 5 | 6 | 7;
   isVip: boolean;
   vipTier: '일반' | 'VIP' | 'SVIP' | '평생회원';
   vipExpiryDate?: string;
@@ -104,6 +105,8 @@ export interface UserProfile {
 export interface AuthUser {
   email: string;
   nickname: string;
+  memberGrade: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  isSuperAdmin?: boolean;
 }
 
 export interface AdSlot {

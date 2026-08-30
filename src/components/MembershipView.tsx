@@ -1,6 +1,7 @@
 import React from 'react';
-import { Crown, Gift, CheckCircle2, Infinity as InfinityIcon } from 'lucide-react';
+import { Crown, Gift, CheckCircle2, Infinity as InfinityIcon, Shield } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { MEMBER_GRADES, getMemberGradeInfo } from '../data/memberGrades';
 
 const STREAK_DAYS = [
   { day: 1, reward: '20 코인' },
@@ -13,7 +14,8 @@ const STREAK_DAYS = [
 ];
 
 export const MembershipView: React.FC = () => {
-  const { userProfile, claimDailyCheckIn, purchaseLifetimePass } = useApp();
+  const { userProfile, claimDailyCheckIn, purchaseLifetimePass, isSuperAdmin } = useApp();
+  const currentGrade = getMemberGradeInfo(userProfile.memberGrade);
 
   return (
     <div className="pb-24 pt-3 px-3 sm:px-4 max-w-5xl mx-auto space-y-6 animate-fadeIn">
@@ -23,21 +25,23 @@ export const MembershipView: React.FC = () => {
         
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="p-1.5 rounded-lg bg-amber-500 text-black font-black text-xs flex items-center gap-1 shadow">
-                <Crown className="w-4 h-4 fill-black" />
-                {userProfile.vipTier}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`p-1.5 rounded-lg font-black text-xs flex items-center gap-1 shadow ${currentGrade.bgClass} ${currentGrade.color} border ${currentGrade.borderClass}`}>
+                {isSuperAdmin ? <Shield className="w-4 h-4" /> : <Crown className="w-4 h-4" />}
+                {currentGrade.label}
               </span>
               <h2 className="text-lg sm:text-xl font-extrabold text-white">
                 {userProfile.nickname} 님의 멤버십
               </h2>
             </div>
             <p className="text-xs text-amber-200/80">
-              {userProfile.isLifetime
+              {isSuperAdmin
+                ? '👑 7등급 최고관리자 · 모든 콘텐츠 무제한 · 관리자 페이지 접근 가능'
+                : userProfile.isLifetime
                 ? '🎉 평생 이용권 적용 중 (만료 없음 · 모든 에피소드 무제한 무료)'
                 : userProfile.isVip
                 ? `혜택 유효 기간: ~ ${userProfile.vipExpiryDate} (모든 에피소드 무제한 무료)`
-                : 'VIP 가입 시 전편 광고 없이 무제한으로 감상하실 수 있습니다.'}
+                : `${currentGrade.description} · 상위 등급으로 업그레이드하면 더 많은 혜택을 받을 수 있습니다.`}
             </p>
           </div>
 
@@ -53,6 +57,43 @@ export const MembershipView: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Member Grade Ladder (1-7) */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-[#181822] border border-white/5 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm sm:text-base font-bold text-white">회원 등급 (1~7등급)</h3>
+          <span className={`text-xs font-bold px-2 py-1 rounded-full border ${currentGrade.bgClass} ${currentGrade.color} ${currentGrade.borderClass}`}>
+            현재 {currentGrade.shortLabel}
+          </span>
+        </div>
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+          {MEMBER_GRADES.map((gradeInfo) => {
+            const isCurrent = gradeInfo.grade === userProfile.memberGrade;
+            const isUnlocked = gradeInfo.grade <= userProfile.memberGrade;
+
+            return (
+              <div
+                key={gradeInfo.grade}
+                className={`py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center min-h-[72px] border ${
+                  isCurrent
+                    ? `${gradeInfo.bgClass} ${gradeInfo.borderClass} ${gradeInfo.color} ring-2 ring-white/20`
+                    : isUnlocked
+                    ? 'bg-white/5 border-white/10 text-zinc-300'
+                    : 'bg-black/30 border-white/5 text-zinc-600'
+                }`}
+              >
+                <span className="text-[10px] font-black">{gradeInfo.grade}</span>
+                <span className="text-[9px] font-semibold leading-tight mt-1">
+                  {gradeInfo.shortLabel.replace('등급', '')}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-zinc-500 leading-relaxed">
+          1등급(일반)부터 7등급(최고관리자)까지 등급이 올라갈수록 더 많은 혜택이 제공됩니다.
+        </p>
       </div>
 
       {/* Daily Attendance Check-In Widget */}

@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useApp, PRESET_PROFILES, ALL_GENRE_TAGS } from '../context/AppContext';
 import { Drama, RecommendationResult, UserReview } from '../types';
+import { getMemberGradeInfo } from '../data/memberGrades';
 
 export const MyPageView: React.FC = () => {
   const {
@@ -62,7 +63,8 @@ export const MyPageView: React.FC = () => {
     claimDailyCheckIn,
     authUser,
     logout,
-    setAdminPanelOpen
+    setAdminPanelOpen,
+    isSuperAdmin
   } = useApp();
 
   const [activeSection, setActiveSection] = useState<'recommend' | 'favorites' | 'history' | 'reviews' | 'settings'>('recommend');
@@ -88,6 +90,7 @@ export const MyPageView: React.FC = () => {
 
   // Get full drama objects for favorites
   const favoriteDramas = dramas.filter(d => favorites.includes(d.bookId));
+  const currentGrade = getMemberGradeInfo(userProfile.memberGrade);
 
   return (
     <div className="pb-28 pt-2 px-3 sm:px-4 max-w-5xl mx-auto space-y-5 animate-fadeIn text-zinc-100">
@@ -130,14 +133,16 @@ export const MyPageView: React.FC = () => {
                   <Edit2 className="w-3 h-3" />
                   <span>수정</span>
                 </button>
-                <button
-                  id="btn-open-admin"
-                  onClick={() => setAdminPanelOpen(true)}
-                  className="text-xs text-zinc-400 hover:text-white px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1"
-                >
-                  <Shield className="w-3 h-3" />
-                  <span>관리자</span>
-                </button>
+                {isSuperAdmin && (
+                  <button
+                    id="btn-open-admin"
+                    onClick={() => setAdminPanelOpen(true)}
+                    className="text-xs text-rose-300 hover:text-white px-2 py-0.5 rounded-lg bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500/20 transition-colors flex items-center gap-1"
+                  >
+                    <Shield className="w-3 h-3" />
+                    <span>관리자</span>
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-xs text-zinc-400">
@@ -152,9 +157,13 @@ export const MyPageView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border flex items-center gap-1 ${currentGrade.bgClass} ${currentGrade.color} ${currentGrade.borderClass}`}>
+                  {isSuperAdmin ? <Shield className="w-3 h-3" /> : <Crown className="w-3 h-3" />}
+                  {currentGrade.label}
+                </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
                   <Crown className="w-3 h-3 fill-amber-400" />
-                  {userProfile.vipTier} 회원 {userProfile.isLifetime ? '(평생 이용)' : `(~${userProfile.vipExpiryDate})`}
+                  {userProfile.vipTier} {userProfile.isLifetime ? '(평생 이용)' : userProfile.isVip ? `(~${userProfile.vipExpiryDate})` : ''}
                 </span>
 
                 <button

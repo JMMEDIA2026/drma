@@ -39,13 +39,14 @@ export const BottomNav: React.FC = () => {
               }`}
             >
               <div className="relative">
+                <span className={`nav-icon-glow ${isActive ? 'is-active' : ''}`} />
                 <Icon
-                  className={`w-5 h-5 transition-all ${
+                  className={`relative z-[1] w-5 h-5 transition-all ${
                     isActive ? 'stroke-[2.4px] text-white scale-110' : 'stroke-[1.7px]'
                   }`}
                 />
                 {showBadge && (
-                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-[#101014]" />
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-[#101014] z-[2]" />
                 )}
               </div>
               <span

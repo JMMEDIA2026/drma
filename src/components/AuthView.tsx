@@ -5,8 +5,21 @@ import { useApp } from '../context/AppContext';
 export const AuthView: React.FC = () => {
   const { login, signup, authError, t, setLanguageModalOpen } = useApp();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem('dramabox_saved_email') || '';
+    } catch {
+      return '';
+    }
+  });
   const [password, setPassword] = useState('');
+  const [autoLogin, setAutoLogin] = useState(() => {
+    try {
+      return localStorage.getItem('dramabox_auto_login') !== 'false';
+    } catch {
+      return true;
+    }
+  });
   const [confirmPassword, setConfirmPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +42,7 @@ export const AuthView: React.FC = () => {
 
     setSubmitting(true);
     if (mode === 'login') {
-      await login(email, password);
+      await login(email, password, autoLogin);
     } else {
       await signup(email, password, nickname);
     }
@@ -136,6 +149,23 @@ export const AuthView: React.FC = () => {
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+
+          {mode === 'login' && (
+            <label
+              id="label-auth-auto-login"
+              htmlFor="input-auth-auto-login"
+              className="flex items-center gap-2.5 cursor-pointer select-none"
+            >
+              <input
+                id="input-auth-auto-login"
+                type="checkbox"
+                checked={autoLogin}
+                onChange={(e) => setAutoLogin(e.target.checked)}
+                className="w-4 h-4 rounded border-white/20 bg-[#1C1C24] text-rose-600 accent-rose-600 cursor-pointer"
+              />
+              <span className="text-xs text-zinc-400">{t('auth_auto_login')}</span>
+            </label>
+          )}
 
           {mode === 'signup' && (
             <div className="relative">

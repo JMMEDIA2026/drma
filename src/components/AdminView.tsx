@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Shield, Megaphone, Users, Trash2, BarChart3, Film, LayoutDashboard, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
+import { getMemberGradeInfo, MemberGrade } from '../data/memberGrades';
 
 type AdminSection = 'dashboard' | 'members' | 'videos' | 'ads';
 
@@ -25,7 +26,9 @@ export const AdminView: React.FC = () => {
     deleteDrama,
     listAccounts,
     deleteAccount,
-    authUser
+    updateAccountGrade,
+    authUser,
+    isSuperAdmin
   } = useApp();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
@@ -34,7 +37,7 @@ export const AdminView: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [classificationFilter, setClassificationFilter] = useState('');
 
-  if (!adminPanelOpen) return null;
+  if (!adminPanelOpen || !isSuperAdmin) return null;
 
   const accounts = listAccounts();
 
@@ -135,30 +138,60 @@ export const AdminView: React.FC = () => {
                 {accounts.length === 0 && (
                   <div className="p-4 text-xs text-zinc-500 text-center">가입된 회원이 없습니다.</div>
                 )}
-                {accounts.map(account => (
+                {accounts.map(account => {
+                  const gradeInfo = getMemberGradeInfo(account.memberGrade);
+                  return (
                   <div
                     key={account.email}
                     id={`admin-account-${account.email}`}
-                    className="p-3.5 flex items-center justify-between"
+                    className="p-3.5 flex items-center justify-between gap-3"
                   >
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-white truncate">{account.nickname}</div>
-                      <div className="text-[11px] text-zinc-500 truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-semibold text-white truncate">{account.nickname}</div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${gradeInfo.bgClass} ${gradeInfo.color} ${gradeInfo.borderClass}`}>
+                          {gradeInfo.label}
+                        </span>
+                        {account.isSuperAdmin && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0">
+                            최고관리자
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-zinc-500 truncate mt-1">
                         {account.email}
                         {authUser?.email === account.email && (
                           <span className="ml-1.5 text-rose-400 font-bold">(현재 로그인)</span>
                         )}
                       </div>
+                      {!account.isSuperAdmin && (
+                        <select
+                          value={account.memberGrade}
+                          onChange={(e) => {
+                            updateAccountGrade(account.email, Number(e.target.value) as MemberGrade);
+                            setAccountsVersion(v => v + 1);
+                          }}
+                          className="mt-2 text-[10px] font-semibold bg-black/40 border border-white/10 text-zinc-200 rounded-lg px-2 py-1 outline-none focus:border-rose-500"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7].map(grade => (
+                            <option key={grade} value={grade}>
+                              {getMemberGradeInfo(grade as MemberGrade).label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleDeleteAccount(account.email)}
-                      className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors shrink-0"
-                      title="계정 삭제"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!account.isSuperAdmin && (
+                      <button
+                        onClick={() => handleDeleteAccount(account.email)}
+                        className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors shrink-0"
+                        title="계정 삭제"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                ))}
+                )})}
               </div>
             </div>
           )}

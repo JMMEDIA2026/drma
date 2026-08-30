@@ -1,12 +1,17 @@
+import 'dotenv/config';
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import adminSettingsHandler from "./api/admin/settings";
 
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 8844;
 
   app.use(express.json());
+
+  // Use the same MongoDB-backed route locally that Vercel serves from api/.
+  app.all("/api/admin/settings", (req, res) => adminSettingsHandler(req, res));
 
   // In-memory cache for API requests
   let cachedData: any = null;
