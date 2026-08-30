@@ -40,7 +40,14 @@ export const LanguageModal: React.FC = () => {
                     : 'bg-[#1C1C24] text-zinc-300 hover:bg-[#23232D] border border-white/5'
                 }`}
               >
-                <span>{lng.native}</span>
+                <span className="flex items-center gap-2.5">
+                  <img
+                    src={`https://flagcdn.com/${lng.flag}.svg`}
+                    alt=""
+                    className="w-5 h-3.5 object-cover rounded-sm shadow-sm shrink-0"
+                  />
+                  <span>{lng.native}</span>
+                </span>
                 {isActive && <Check className="w-4 h-4" />}
               </button>
             );

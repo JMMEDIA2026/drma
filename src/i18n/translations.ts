@@ -1,19 +1,23 @@
 export type LanguageCode = 'ko' | 'in' | 'en' | 'th' | 'es' | 'pt' | 'fr' | 'de' | 'it' | 'tr' | 'vi' | 'ja' | 'zh';
 
-export const LANGUAGES: { code: LanguageCode; native: string }[] = [
-  { code: 'ko', native: '한국어' },
-  { code: 'en', native: 'English' },
-  { code: 'in', native: 'Bahasa Indonesia' },
-  { code: 'th', native: 'ไทย' },
-  { code: 'es', native: 'Español' },
-  { code: 'pt', native: 'Português' },
-  { code: 'fr', native: 'Français' },
-  { code: 'de', native: 'Deutsch' },
-  { code: 'it', native: 'Italiano' },
-  { code: 'tr', native: 'Türkçe' },
-  { code: 'vi', native: 'Tiếng Việt' },
-  { code: 'ja', native: '日本語' },
-  { code: 'zh', native: '中文' },
+// `flag` is a lowercase ISO 3166-1 country code used to load a flag icon
+// from flagcdn.com — emoji flags render as plain "KR"/"US" text on Windows
+// (no color-flag glyphs in its emoji font), so an actual image is used
+// instead to render consistently across platforms.
+export const LANGUAGES: { code: LanguageCode; native: string; flag: string }[] = [
+  { code: 'ko', native: '한국어', flag: 'kr' },
+  { code: 'en', native: 'English', flag: 'us' },
+  { code: 'in', native: 'Bahasa Indonesia', flag: 'id' },
+  { code: 'th', native: 'ไทย', flag: 'th' },
+  { code: 'es', native: 'Español', flag: 'es' },
+  { code: 'pt', native: 'Português', flag: 'br' },
+  { code: 'fr', native: 'Français', flag: 'fr' },
+  { code: 'de', native: 'Deutsch', flag: 'de' },
+  { code: 'it', native: 'Italiano', flag: 'it' },
+  { code: 'tr', native: 'Türkçe', flag: 'tr' },
+  { code: 'vi', native: 'Tiếng Việt', flag: 'vn' },
+  { code: 'ja', native: '日本語', flag: 'jp' },
+  { code: 'zh', native: '中文', flag: 'cn' },
 ];
 
 export const DEFAULT_LANGUAGE: LanguageCode = 'ko';
