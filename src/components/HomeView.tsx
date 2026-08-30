@@ -517,8 +517,7 @@ export const HomeView: React.FC = () => {
               className="group cursor-pointer flex flex-col select-none transition-transform hover:-translate-y-1 active:scale-95"
             >
               {/* Poster Image Container */}
-              <div className="thumbnail-neon-wrap shadow-md">
-                <div className="thumbnail-neon-inner relative aspect-[3/4]">
+              <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-[#1c1c24] shadow-md">
                 <img
                   src={drama.cover}
                   alt={drama.bookName}
@@ -565,7 +564,6 @@ export const HomeView: React.FC = () => {
                 <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium flex items-center gap-0.5">
                   <Play className="w-2.5 h-2.5 fill-white" />
                   <span>{drama.hotCode}</span>
-                </div>
                 </div>
               </div>
 
