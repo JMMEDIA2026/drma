@@ -27,6 +27,7 @@ export const Navbar: React.FC = () => {
     dramas,
     t,
     language,
+    isAuthenticated,
     setLanguageModalOpen
   } = useApp();
 
@@ -36,7 +37,7 @@ export const Navbar: React.FC = () => {
     ? dramas[0].bookName
     : '나 없이도 잘해봐!';
 
-  const categories: HomeCategoryType[] = userProfile.isLifetime
+  const categories: HomeCategoryType[] = isAuthenticated && userProfile.isLifetime
     ? [...BASE_CATEGORIES, '성인']
     : BASE_CATEGORIES;
 

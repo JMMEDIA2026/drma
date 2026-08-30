@@ -8,18 +8,28 @@ interface NavItem {
   labelKey: string;
   icon: React.ElementType;
   hasBadge?: boolean;
+  requiresAuth?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'home', labelKey: 'nav_home', icon: Home },
   { id: 'reels', labelKey: 'nav_reels', icon: PlaySquare },
   { id: 'membership', labelKey: 'nav_membership', icon: Sparkles },
-  { id: 'storage', labelKey: 'nav_storage', icon: Bookmark },
-  { id: 'mypage', labelKey: 'nav_mypage', icon: User, hasBadge: true },
+  { id: 'storage', labelKey: 'nav_storage', icon: Bookmark, requiresAuth: true },
+  { id: 'mypage', labelKey: 'nav_mypage', icon: User, hasBadge: true, requiresAuth: true },
 ];
 
 export const BottomNav: React.FC = () => {
-  const { activeTab, setActiveTab, userProfile, t } = useApp();
+  const { activeTab, setActiveTab, userProfile, t, isAuthenticated, setAuthViewOpen, showToast } = useApp();
+
+  const handleNavClick = (item: NavItem) => {
+    if (item.requiresAuth && !isAuthenticated) {
+      showToast('로그인이 필요한 메뉴입니다.');
+      setAuthViewOpen(true);
+      return;
+    }
+    setActiveTab(item.id);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#101014]/95 backdrop-blur-lg border-t border-white/5 py-1.5 px-3 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto select-none">
@@ -33,7 +43,7 @@ export const BottomNav: React.FC = () => {
             <button
               id={`nav-item-${item.id}`}
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleNavClick(item)}
               className={`relative flex flex-col items-center justify-center py-1 px-3 min-w-[56px] transition-transform active:scale-90 ${
                 isActive ? 'text-white' : 'text-zinc-400 hover:text-zinc-200'
               }`}

@@ -31,7 +31,8 @@ export const HomeView: React.FC = () => {
     adSlots,
     ageVerified,
     verifyAge,
-    userProfile
+    userProfile,
+    isAuthenticated
   } = useApp();
 
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
@@ -99,7 +100,7 @@ export const HomeView: React.FC = () => {
       }
       return list;
     }
-    if (homeCategory === '성인' && userProfile.isLifetime) {
+    if (homeCategory === '성인' && isAuthenticated && userProfile.isLifetime) {
       return dramas.filter(d => d.ageRating === '19');
     }
     // Default '추천'
@@ -463,7 +464,7 @@ export const HomeView: React.FC = () => {
       )}
 
       {/* Adult Content Age Gate */}
-      {homeCategory === '성인' && userProfile.isLifetime && !ageVerified && (
+      {homeCategory === '성인' && isAuthenticated && userProfile.isLifetime && !ageVerified && (
         <div className="flex flex-col items-center justify-center text-center gap-4 py-16 px-6 rounded-2xl bg-[#171018] border border-red-500/20">
           <div className="p-4 rounded-full bg-red-500/10 border border-red-500/30">
             <ShieldAlert className="w-8 h-8 text-red-400" />

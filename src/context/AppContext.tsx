@@ -232,6 +232,8 @@ interface AppContextType {
   t: (key: string) => string;
   languageModalOpen: boolean;
   setLanguageModalOpen: (open: boolean) => void;
+  authViewOpen: boolean;
+  setAuthViewOpen: (open: boolean) => void;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -317,6 +319,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
   const [languageModalOpen, setLanguageModalOpen] = useState<boolean>(false);
+  const [authViewOpen, setAuthViewOpen] = useState<boolean>(false);
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
@@ -487,6 +490,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ? `${nickname.trim()}님, 최고관리자로 가입되었습니다! 👑`
         : `${nickname.trim()}님, 회원가입을 환영합니다! 🎉`
     );
+    setAuthViewOpen(false);
     return true;
   };
 
@@ -536,6 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ? `${account.nickname}님, 최고관리자로 로그인되었습니다! 👑`
         : `${account.nickname}님, 다시 오신 것을 환영합니다!`
     );
+    setAuthViewOpen(false);
     return true;
   };
 
@@ -1372,6 +1377,8 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
         t,
         languageModalOpen,
         setLanguageModalOpen,
+        authViewOpen,
+        setAuthViewOpen,
       }}
     >
       {children}

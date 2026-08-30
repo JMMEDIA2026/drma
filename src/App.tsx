@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -16,16 +17,7 @@ import { AdminView } from './components/AdminView';
 import { LanguageModal } from './components/LanguageModal';
 
 const MainContent: React.FC = () => {
-  const { activeTab, toastMessage, isAuthenticated } = useApp();
-
-  if (!isAuthenticated) {
-    return (
-      <>
-        <AuthView />
-        <LanguageModal />
-      </>
-    );
-  }
+  const { activeTab, toastMessage, isAuthenticated, authViewOpen, setAuthViewOpen } = useApp();
 
   return (
     <div className="min-h-screen bg-[#101014] text-zinc-100 flex flex-col font-sans selection:bg-rose-600 selection:text-white">
@@ -37,8 +29,8 @@ const MainContent: React.FC = () => {
         {activeTab === 'home' && <HomeView />}
         {activeTab === 'reels' && <ReelsPlayerView />}
         {activeTab === 'membership' && <MembershipView />}
-        {activeTab === 'storage' && <StorageView />}
-        {activeTab === 'mypage' && <MyPageView />}
+        {activeTab === 'storage' && isAuthenticated && <StorageView />}
+        {activeTab === 'mypage' && isAuthenticated && <MyPageView />}
       </main>
 
       {/* Global Bottom Navigation */}
@@ -51,6 +43,21 @@ const MainContent: React.FC = () => {
       <RatingModal />
       <AdminView />
       <LanguageModal />
+
+      {/* Login/signup overlay — opened on demand (e.g. from 보관함/마이페이지
+          for guests) instead of blocking the whole app before auth */}
+      {authViewOpen && (
+        <div className="fixed inset-0 z-[70] overflow-y-auto bg-[#101014]">
+          <button
+            id="btn-close-auth-view"
+            onClick={() => setAuthViewOpen(false)}
+            className="absolute top-4 left-4 z-10 p-2.5 rounded-full bg-[#1C1C24] hover:bg-[#23232D] border border-white/10 text-zinc-300 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <AuthView />
+        </div>
+      )}
 
       {/* Toast Notification Alert */}
       {toastMessage && (
