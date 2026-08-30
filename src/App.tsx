@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
@@ -73,6 +74,7 @@ export default function App() {
   return (
     <AppProvider>
       <MainContent />
+      <SpeedInsights />
     </AppProvider>
   );
 }
