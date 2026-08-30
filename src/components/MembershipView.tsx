@@ -1,7 +1,17 @@
 import React from 'react';
-import { Crown, Gift, CheckCircle2, Infinity as InfinityIcon, Shield } from 'lucide-react';
+import { Crown, Gift, CheckCircle2, Infinity as InfinityIcon, Shield, User, Medal, Award, Trophy, Gem, Sparkles, Lock } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { MEMBER_GRADES, getMemberGradeInfo } from '../data/memberGrades';
+import { MEMBER_GRADES, getMemberGradeInfo, MemberGrade } from '../data/memberGrades';
+
+const GRADE_ICONS: Record<MemberGrade, React.ElementType> = {
+  1: User,
+  2: Medal,
+  3: Award,
+  4: Trophy,
+  5: Gem,
+  6: Crown,
+  7: Sparkles,
+};
 
 const STREAK_DAYS = [
   { day: 1, reward: '20 코인' },
@@ -71,20 +81,24 @@ export const MembershipView: React.FC = () => {
           {MEMBER_GRADES.map((gradeInfo) => {
             const isCurrent = gradeInfo.grade === userProfile.memberGrade;
             const isUnlocked = gradeInfo.grade <= userProfile.memberGrade;
+            const GradeIcon = GRADE_ICONS[gradeInfo.grade];
 
             return (
               <div
                 key={gradeInfo.grade}
-                className={`py-2 px-1 rounded-xl text-center flex flex-col items-center justify-center min-h-[72px] border ${
+                className={`relative py-2.5 px-1 rounded-xl text-center flex flex-col items-center justify-center gap-1 min-h-[76px] border transition-all ${
                   isCurrent
-                    ? `${gradeInfo.bgClass} ${gradeInfo.borderClass} ${gradeInfo.color} ring-2 ring-white/20`
+                    ? `${gradeInfo.bgClass} ${gradeInfo.borderClass} ${gradeInfo.color} ring-2 ring-white/25 grade-badge-current`
                     : isUnlocked
                     ? 'bg-white/5 border-white/10 text-zinc-300'
-                    : 'bg-black/30 border-white/5 text-zinc-600'
+                    : 'bg-black/30 border-white/5 text-zinc-600 grayscale opacity-60'
                 }`}
               >
-                <span className="text-[10px] font-black">{gradeInfo.grade}</span>
-                <span className="text-[9px] font-semibold leading-tight mt-1">
+                {!isUnlocked && (
+                  <Lock className="absolute top-1 right-1 w-2.5 h-2.5 text-zinc-600" />
+                )}
+                <GradeIcon className={`w-4 h-4 sm:w-5 sm:h-5 ${isCurrent ? 'grade-icon-float' : ''}`} />
+                <span className="text-[9px] font-semibold leading-tight">
                   {gradeInfo.shortLabel.replace('등급', '')}
                 </span>
               </div>
