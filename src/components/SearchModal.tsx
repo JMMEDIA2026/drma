@@ -124,7 +124,7 @@ export const SearchModal: React.FC = () => {
                         <div className="flex items-center gap-2 mt-1 text-xs text-zinc-400">
                           <span>{drama.genre}</span>
                           <span>•</span>
-                          <span className="text-amber-400">★ {drama.rating || '4.8'}</span>
+                          <span className="text-amber-400">★ {(drama.rating ?? 4.8).toFixed(1)}</span>
                           <span>•</span>
                           <span>조회 {drama.hotCode}</span>
                         </div>

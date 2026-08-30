@@ -144,7 +144,7 @@ export const DramaDetailSheet: React.FC = () => {
                   className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 active:scale-95 transition-all"
                 >
                   <Star className="w-3.5 h-3.5 fill-amber-400" />
-                  <span>{selectedDrama.rating || '4.8'}</span>
+                  <span>{(selectedDrama.rating ?? 4.8).toFixed(1)}</span>
                   <span className="text-[11px] text-zinc-400">({(selectedDrama.ratingCount || 1200).toLocaleString()} 리뷰 &gt;)</span>
                 </button>
 
@@ -407,7 +407,7 @@ export const DramaDetailSheet: React.FC = () => {
               <div className="p-4 bg-[#181820] rounded-2xl border border-white/5 flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-3xl font-extrabold text-white">{selectedDrama.rating || '4.8'}</span>
+                    <span className="text-3xl font-extrabold text-white">{(selectedDrama.rating ?? 4.8).toFixed(1)}</span>
                     <div>
                       <div className="flex items-center gap-0.5 text-amber-400">
                         {[1, 2, 3, 4, 5].map((s) => (

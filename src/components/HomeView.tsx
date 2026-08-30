@@ -434,7 +434,7 @@ export const HomeView: React.FC = () => {
                               {item.tagNames[0] || '드라마'}
                             </span>
                             <span className="text-[11px] text-amber-400 font-medium">
-                              ★ {item.rating || '4.8'}
+                              ★ {(item.rating ?? 4.8).toFixed(1)}
                             </span>
                           </div>
                         </div>

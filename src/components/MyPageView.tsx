@@ -446,7 +446,7 @@ export const MyPageView: React.FC = () => {
                             </span>
                             <span className="text-[11px] text-amber-400 font-bold flex items-center gap-0.5">
                               <Star className="w-3 h-3 fill-amber-400" />
-                              {drama.rating || '4.8'}
+                              {(drama.rating ?? 4.8).toFixed(1)}
                             </span>
                           </div>
 
