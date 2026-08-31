@@ -527,6 +527,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.removeItem('dramabox_auth_user');
       sessionStorage.removeItem('dramabox_auth_session');
     } catch (e) {}
+    if (activeTab === 'storage' || activeTab === 'mypage') {
+      setActiveTab('home');
+    }
+    setAdminPanelOpen(false);
     showToast('로그아웃 되었습니다.');
   };
 

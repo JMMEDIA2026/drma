@@ -143,6 +143,14 @@ export const MyPageView: React.FC = () => {
                     <span>관리자</span>
                   </button>
                 )}
+                <button
+                  id="btn-logout-header"
+                  onClick={logout}
+                  className="text-xs text-zinc-400 hover:text-white px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>로그아웃</span>
+                </button>
               </div>
 
               <div className="flex items-center gap-2 text-xs text-zinc-400">
