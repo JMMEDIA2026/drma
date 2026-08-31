@@ -151,9 +151,10 @@ export const ReelsPlayerView: React.FC = () => {
   }
 
   return (
+    <div className="w-full h-[calc(100vh-62px)] bg-black flex items-center justify-center overflow-hidden">
     <div
       id="reels-player-container"
-      className={`relative w-full h-[calc(100vh-62px)] bg-black overflow-hidden select-none flex flex-col justify-between text-white ${
+      className={`relative h-full aspect-[9/16] max-w-full bg-black overflow-hidden select-none flex flex-col justify-between text-white ${
         userProfile.isVip ? 'ring-2 ring-inset ring-amber-400/50 shadow-[inset_0_0_40px_rgba(245,158,11,0.15)]' : ''
       }`}
       onTouchStart={handleTouchStart}
@@ -482,6 +483,7 @@ export const ReelsPlayerView: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
