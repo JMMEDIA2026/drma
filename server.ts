@@ -6,6 +6,7 @@ import adminSettingsHandler from "./api/admin/settings";
 import authSignupHandler from "./api/auth/signup";
 import authLoginHandler from "./api/auth/login";
 import authMembersHandler from "./api/auth/members";
+import koreaMoviesHandler from "./api/korea-movies";
 
 async function startServer() {
   const app = express();
@@ -18,6 +19,7 @@ async function startServer() {
   app.all("/api/auth/signup", (req, res) => authSignupHandler(req, res));
   app.all("/api/auth/login", (req, res) => authLoginHandler(req, res));
   app.all("/api/auth/members", (req, res) => authMembersHandler(req, res));
+  app.all("/api/korea-movies", (req, res) => koreaMoviesHandler(req, res));
 
   // In-memory cache for API requests
   let cachedData: any = null;
