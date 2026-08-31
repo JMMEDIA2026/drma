@@ -9,6 +9,7 @@ dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 // Reused across warm serverless invocations.
 let clientPromise: Promise<MongoClient> | null = null;
+let indexesEnsured = false;
 
 function getMongoClient(): Promise<MongoClient> {
   // Some Vercel MongoDB/Atlas integrations create the env var under a
@@ -27,5 +28,18 @@ function getMongoClient(): Promise<MongoClient> {
 
 export async function getDb(): Promise<Db> {
   const client = await getMongoClient();
-  return client.db('dramabox');
+  const db = client.db('dramabox');
+
+  // Enforce email uniqueness at the DB level — the signup handler only
+  // checks-then-inserts, which leaves a race-condition window under
+  // concurrent signups for the same address. Cheap no-op once the index
+  // already exists, so safe to call on every warm invocation too.
+  if (!indexesEnsured) {
+    indexesEnsured = true;
+    db.collection('members')
+      .createIndex({ email: 1 }, { unique: true })
+      .catch(err => console.error('Failed to ensure members.email index:', err.message));
+  }
+
+  return db;
 }
