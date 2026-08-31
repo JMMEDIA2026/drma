@@ -49,44 +49,6 @@ export const ALL_GENRE_TAGS = [
   '궁중', '다크히어로', '최강자', '인생 역전', '초자연', '더빙', '학원', '스릴러'
 ];
 
-interface StoredAccount {
-  email: string;
-  passwordHash: string;
-  nickname: string;
-  memberGrade: MemberGrade;
-  isSuperAdmin?: boolean;
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const data = new TextEncoder().encode(password);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function loadAccounts(): StoredAccount[] {
-  try {
-    const saved = localStorage.getItem('dramabox_accounts');
-    const accounts: StoredAccount[] = saved ? JSON.parse(saved) : [];
-    return accounts.map(a => ({
-      ...a,
-      memberGrade: clampMemberGrade(
-        a.memberGrade ?? (isSuperAdminEmail(a.email) ? 7 : 1)
-      ),
-      isSuperAdmin: a.isSuperAdmin || isSuperAdminEmail(a.email),
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function saveAccounts(accounts: StoredAccount[]) {
-  try {
-    localStorage.setItem('dramabox_accounts', JSON.stringify(accounts));
-  } catch (e) {
-    console.warn('Storage save failed', e);
-  }
-}
-
 function applyGradeToProfile(profile: UserProfile, grade: MemberGrade): UserProfile {
   const gradeInfo = getMemberGradeInfo(grade);
   const isAdmin = isSuperAdminGrade(grade);
@@ -219,9 +181,9 @@ interface AppContextType {
   updateAdSlot: (id: string, changes: Partial<AdSlot>) => void;
   adminPanelOpen: boolean;
   setAdminPanelOpen: (open: boolean) => void;
-  listAccounts: () => { email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin?: boolean }[];
-  deleteAccount: (email: string) => void;
-  updateAccountGrade: (email: string, grade: MemberGrade) => void;
+  listAccounts: () => Promise<{ email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin?: boolean; createdAt?: string }[]>;
+  deleteAccount: (email: string) => Promise<void>;
+  updateAccountGrade: (email: string, grade: MemberGrade) => Promise<void>;
   isSuperAdmin: boolean;
   updateDrama: (bookId: string, changes: Partial<Drama>) => void;
   deleteDrama: (bookId: string) => void;
@@ -460,23 +422,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
 
-    const accounts = loadAccounts();
-    if (accounts.some(a => a.email === normalizedEmail)) {
-      setAuthError('이미 가입된 이메일입니다.');
+    let signupResult: { email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin: boolean };
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail, password, nickname: nickname.trim() }),
+      });
+      if (res.status === 409) {
+        setAuthError('이미 가입된 이메일입니다.');
+        return false;
+      }
+      if (!res.ok) {
+        setAuthError('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return false;
+      }
+      signupResult = await res.json();
+    } catch (e) {
+      setAuthError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
       return false;
     }
 
-    const passwordHash = await hashPassword(password);
-    const grade: MemberGrade = isSuperAdminEmail(normalizedEmail) ? 7 : 1;
-    const accountIsSuperAdmin = isSuperAdminEmail(normalizedEmail);
-    accounts.push({
-      email: normalizedEmail,
-      passwordHash,
-      nickname: nickname.trim(),
-      memberGrade: grade,
-      isSuperAdmin: accountIsSuperAdmin,
-    });
-    saveAccounts(accounts);
+    const grade = signupResult.memberGrade;
+    const accountIsSuperAdmin = signupResult.isSuperAdmin;
 
     setUserProfile(prev => applyGradeToProfile({ ...prev, nickname: nickname.trim() }, grade));
     authRememberMeRef.current = true;
@@ -497,24 +465,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const login = async (email: string, password: string, rememberMe = true): Promise<boolean> => {
     setAuthError(null);
     const normalizedEmail = email.trim().toLowerCase();
-    const accounts = loadAccounts();
-    const account = accounts.find(a => a.email === normalizedEmail);
-
-    if (!account) {
-      setAuthError('가입되지 않은 이메일입니다. 먼저 회원가입을 진행해주세요.');
+    let account: { email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin: boolean };
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail, password }),
+      });
+      if (res.status === 404) {
+        setAuthError('가입되지 않은 이메일입니다. 먼저 회원가입을 진행해주세요.');
+        return false;
+      }
+      if (res.status === 401) {
+        setAuthError('비밀번호가 일치하지 않습니다.');
+        return false;
+      }
+      if (!res.ok) {
+        setAuthError('로그인에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        return false;
+      }
+      account = await res.json();
+    } catch (e) {
+      setAuthError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
       return false;
     }
 
-    const passwordHash = await hashPassword(password);
-    if (passwordHash !== account.passwordHash) {
-      setAuthError('비밀번호가 일치하지 않습니다.');
-      return false;
-    }
-
-    const memberGrade = clampMemberGrade(
-      account.memberGrade ?? (isSuperAdminEmail(normalizedEmail) ? 7 : 1)
-    );
-    const accountIsSuperAdmin = account.isSuperAdmin || isSuperAdminEmail(normalizedEmail);
+    const memberGrade = account.memberGrade;
+    const accountIsSuperAdmin = account.isSuperAdmin;
 
     authRememberMeRef.current = rememberMe;
     try {
@@ -611,6 +588,18 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
     }
   };
 
+  const requireAdminSecret = (): string | null => {
+    let secret = getStoredAdminSecret();
+    if (!secret) {
+      secret = window.prompt('관리자 비밀키를 입력하세요 (Vercel 환경변수 ADMIN_API_SECRET과 동일해야 합니다):');
+      if (!secret) return null;
+      try {
+        localStorage.setItem('dramabox_admin_secret', secret);
+      } catch (e) {}
+    }
+    return secret;
+  };
+
   const postAdminSettings = async (body: { adSlots?: AdSlot[]; dramaOverrides?: DramaOverrideMap }) => {
     let secret = getStoredAdminSecret();
     if (!secret) {
@@ -672,27 +661,62 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
 
   const [adminPanelOpen, setAdminPanelOpen] = useState<boolean>(false);
 
-  const listAccounts = () =>
-    loadAccounts().map(a => ({
-      email: a.email,
-      nickname: a.nickname,
-      memberGrade: clampMemberGrade(
-        a.memberGrade ?? (isSuperAdminEmail(a.email) ? 7 : 1)
-      ),
-      isSuperAdmin: a.isSuperAdmin || isSuperAdminEmail(a.email),
-    }));
+  const listAccounts = async () => {
+    const secret = requireAdminSecret();
+    if (!secret) return [];
+    try {
+      const res = await fetch('/api/auth/members', {
+        headers: { 'X-Admin-Secret': secret },
+      });
+      if (res.status === 401) {
+        try {
+          localStorage.removeItem('dramabox_admin_secret');
+        } catch (e) {}
+        showToast('관리자 비밀키가 올바르지 않습니다. 다시 시도해주세요.');
+        return [];
+      }
+      if (!res.ok) {
+        showToast('회원 목록을 불러오지 못했습니다.');
+        return [];
+      }
+      const data = await res.json();
+      return data.accounts as { email: string; nickname: string; memberGrade: MemberGrade; isSuperAdmin?: boolean; createdAt?: string }[];
+    } catch (e) {
+      showToast('서버에 연결할 수 없습니다.');
+      return [];
+    }
+  };
 
-  const deleteAccount = (email: string) => {
+  const deleteAccount = async (email: string) => {
     if (isSuperAdminEmail(email)) {
       showToast('최고관리자 계정은 삭제할 수 없습니다.');
       return;
     }
-    const accounts = loadAccounts().filter(a => a.email !== email);
-    saveAccounts(accounts);
-    showToast('계정이 삭제되었습니다.');
+    const secret = requireAdminSecret();
+    if (!secret) return;
+    try {
+      const res = await fetch(`/api/auth/members?email=${encodeURIComponent(email)}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Secret': secret },
+      });
+      if (res.status === 401) {
+        try {
+          localStorage.removeItem('dramabox_admin_secret');
+        } catch (e) {}
+        showToast('관리자 비밀키가 올바르지 않습니다. 다시 시도해주세요.');
+        return;
+      }
+      if (!res.ok) {
+        showToast('계정 삭제에 실패했습니다.');
+        return;
+      }
+      showToast('계정이 삭제되었습니다.');
+    } catch (e) {
+      showToast('서버에 연결할 수 없습니다.');
+    }
   };
 
-  const updateAccountGrade = (email: string, grade: MemberGrade) => {
+  const updateAccountGrade = async (email: string, grade: MemberGrade) => {
     if (!isSuperAdmin) {
       showToast('등급 변경 권한이 없습니다.');
       return;
@@ -700,16 +724,30 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
 
     const normalizedEmail = email.trim().toLowerCase();
     const nextGrade = isSuperAdminEmail(normalizedEmail) ? 7 : clampMemberGrade(grade);
-    const accounts = loadAccounts().map(a =>
-      a.email === normalizedEmail
-        ? {
-            ...a,
-            memberGrade: nextGrade,
-            isSuperAdmin: isSuperAdminEmail(normalizedEmail),
-          }
-        : a
-    );
-    saveAccounts(accounts);
+
+    const secret = requireAdminSecret();
+    if (!secret) return;
+    try {
+      const res = await fetch('/api/auth/members', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': secret },
+        body: JSON.stringify({ email: normalizedEmail, memberGrade: nextGrade }),
+      });
+      if (res.status === 401) {
+        try {
+          localStorage.removeItem('dramabox_admin_secret');
+        } catch (e) {}
+        showToast('관리자 비밀키가 올바르지 않습니다. 다시 시도해주세요.');
+        return;
+      }
+      if (!res.ok) {
+        showToast('등급 변경에 실패했습니다.');
+        return;
+      }
+    } catch (e) {
+      showToast('서버에 연결할 수 없습니다.');
+      return;
+    }
 
     if (authUser?.email === normalizedEmail) {
       setAuthUser(prev =>

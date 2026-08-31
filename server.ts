@@ -3,6 +3,9 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import adminSettingsHandler from "./api/admin/settings";
+import authSignupHandler from "./api/auth/signup";
+import authLoginHandler from "./api/auth/login";
+import authMembersHandler from "./api/auth/members";
 
 async function startServer() {
   const app = express();
@@ -10,8 +13,11 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Use the same MongoDB-backed route locally that Vercel serves from api/.
+  // Use the same MongoDB-backed routes locally that Vercel serves from api/.
   app.all("/api/admin/settings", (req, res) => adminSettingsHandler(req, res));
+  app.all("/api/auth/signup", (req, res) => authSignupHandler(req, res));
+  app.all("/api/auth/login", (req, res) => authLoginHandler(req, res));
+  app.all("/api/auth/members", (req, res) => authMembersHandler(req, res));
 
   // In-memory cache for API requests
   let cachedData: any = null;

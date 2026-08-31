@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Shield, Megaphone, Users, Trash2, BarChart3, Film, LayoutDashboard, Search } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
 import { getMemberGradeInfo, MemberGrade } from '../data/memberGrades';
 
 type AdminSection = 'dashboard' | 'members' | 'videos' | 'ads';
+
+interface AccountRow {
+  email: string;
+  nickname: string;
+  memberGrade: MemberGrade;
+  isSuperAdmin?: boolean;
+  createdAt?: string;
+}
 
 const BADGE_OPTIONS: NonNullable<Drama['badge']>[] = ['인기', '신작', '더빙', '독점', 'HOT', '추천'];
 
@@ -32,17 +40,27 @@ export const AdminView: React.FC = () => {
   } = useApp();
 
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
+  const [accounts, setAccounts] = useState<AccountRow[]>([]);
   const [accountsVersion, setAccountsVersion] = useState(0);
   const [videoSearch, setVideoSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [classificationFilter, setClassificationFilter] = useState('');
 
+  useEffect(() => {
+    if (!adminPanelOpen || !isSuperAdmin || activeSection !== 'members') return;
+    let cancelled = false;
+    listAccounts().then((list: AccountRow[]) => {
+      if (!cancelled) setAccounts(list);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminPanelOpen, isSuperAdmin, activeSection, accountsVersion]);
+
   if (!adminPanelOpen || !isSuperAdmin) return null;
 
-  const accounts = listAccounts();
-
-  const handleDeleteAccount = (email: string) => {
-    deleteAccount(email);
+  const handleDeleteAccount = async (email: string) => {
+    await deleteAccount(email);
     setAccountsVersion(v => v + 1);
   };
 
@@ -167,8 +185,8 @@ export const AdminView: React.FC = () => {
                       {!account.isSuperAdmin && (
                         <select
                           value={account.memberGrade}
-                          onChange={(e) => {
-                            updateAccountGrade(account.email, Number(e.target.value) as MemberGrade);
+                          onChange={async (e) => {
+                            await updateAccountGrade(account.email, Number(e.target.value) as MemberGrade);
                             setAccountsVersion(v => v + 1);
                           }}
                           className="mt-2 text-[10px] font-semibold bg-black/40 border border-white/10 text-zinc-200 rounded-lg px-2 py-1 outline-none focus:border-rose-500"
