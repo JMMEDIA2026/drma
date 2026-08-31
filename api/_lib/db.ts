@@ -11,9 +11,13 @@ dns.setServers(['8.8.8.8', '1.1.1.1']);
 let clientPromise: Promise<MongoClient> | null = null;
 
 function getMongoClient(): Promise<MongoClient> {
-  const uri = process.env.MONGODB_URI;
+  // Some Vercel MongoDB/Atlas integrations create the env var under a
+  // product-prefixed name (e.g. jmboxdb_MONGODB_URI) instead of a plain
+  // MONGODB_URI. Check both so the connection doesn't silently fail just
+  // because the dashboard named it differently than the code expects.
+  const uri = process.env.MONGODB_URI || process.env.jmboxdb_MONGODB_URI;
   if (!uri) {
-    throw new Error('MONGODB_URI is not set.');
+    throw new Error('MONGODB_URI (or jmboxdb_MONGODB_URI) is not set.');
   }
   if (!clientPromise) {
     clientPromise = new MongoClient(uri).connect();
