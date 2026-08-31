@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Play, Heart, Share2, Star, Lock, Sparkles, ThumbsUp, ThumbsDown, MessageSquarePlus, Film, User, Calendar, ShieldCheck, Check, Edit3 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama, CastMember, UserReview } from '../types';
@@ -6,6 +6,7 @@ import { Drama, CastMember, UserReview } from '../types';
 export const DramaDetailSheet: React.FC = () => {
   const {
     selectedDrama,
+    dramaDetailInitialTab,
     closeDramaDetail,
     playDrama,
     toggleFavorite,
@@ -23,6 +24,14 @@ export const DramaDetailSheet: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'synopsis' | 'episodes' | 'reviews'>('synopsis');
+
+  // The sheet stays mounted (just renders null when closed), so its tab
+  // state persists across opens — resync it to whatever tab the caller
+  // requested (e.g. the reels player's episode-list button) each time a
+  // drama is opened.
+  useEffect(() => {
+    if (selectedDrama) setActiveTab(dramaDetailInitialTab);
+  }, [selectedDrama, dramaDetailInitialTab]);
   const [showReviewInput, setShowReviewInput] = useState<boolean>(false);
   const [reviewRating, setReviewRating] = useState<number>(5);
   const [reviewComment, setReviewComment] = useState<string>('');

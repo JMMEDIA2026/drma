@@ -124,7 +124,8 @@ interface AppContextType {
   selectedLanguageFilter: string | null;
   setSelectedLanguageFilter: (lang: string | null) => void;
   selectedDrama: Drama | null;
-  openDramaDetail: (drama: Drama) => void;
+  dramaDetailInitialTab: 'synopsis' | 'episodes' | 'reviews';
+  openDramaDetail: (drama: Drama, initialTab?: 'synopsis' | 'episodes' | 'reviews') => void;
   closeDramaDetail: () => void;
   activePlayerDrama: Drama | null;
   activeEpisodeIndex: number;
@@ -298,6 +299,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedLanguageFilter, setSelectedLanguageFilter] = useState<string | null>(null);
   
   const [selectedDrama, setSelectedDrama] = useState<Drama | null>(null);
+  const [dramaDetailInitialTab, setDramaDetailInitialTab] = useState<'synopsis' | 'episodes' | 'reviews'>('synopsis');
   const [activePlayerDrama, setActivePlayerDrama] = useState<Drama | null>(null);
   const [activeEpisodeIndex, setActiveEpisodeIndex] = useState<number>(1);
   
@@ -903,7 +905,8 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
 
   const isFavorite = (bookId: string) => favorites.includes(bookId);
 
-  const openDramaDetail = (drama: Drama) => {
+  const openDramaDetail = (drama: Drama, initialTab: 'synopsis' | 'episodes' | 'reviews' = 'synopsis') => {
+    setDramaDetailInitialTab(initialTab);
     setSelectedDrama(drama);
     ensureRealEpisodes(drama.bookId);
   };
@@ -1349,6 +1352,7 @@ function mergeAdSlots(stored: AdSlot[] | null): AdSlot[] {
         selectedLanguageFilter,
         setSelectedTagFilter,
         selectedDrama,
+        dramaDetailInitialTab,
         openDramaDetail,
         closeDramaDetail,
         activePlayerDrama,

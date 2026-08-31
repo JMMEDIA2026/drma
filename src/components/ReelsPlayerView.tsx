@@ -390,7 +390,7 @@ export const ReelsPlayerView: React.FC = () => {
           id="btn-player-episodes-sheet"
           onClick={(e) => {
             e.stopPropagation();
-            openDramaDetail(drama);
+            openDramaDetail(drama, 'episodes');
           }}
           className="flex flex-col items-center gap-1 group"
         >
