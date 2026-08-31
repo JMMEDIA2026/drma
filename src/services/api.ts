@@ -124,6 +124,54 @@ export async function fetchDramasByCategory(categoryId: number, page: number = 1
   }
 }
 
+// Fetches Korean movies/dramas from the MovieBox catalog — a separate
+// source from the DramaBox proxy, used for the '한국' tab. NOTE: this API
+// never returns a playable video URL (playUrl is always empty), so items
+// from this source only support browsing cover/info, not real playback —
+// the player falls back to showing the still poster, same as any drama
+// without a videoSrc.
+export async function fetchKoreaMovies(page: number = 1): Promise<Drama[]> {
+  try {
+    const res = await fetch(`/api/proxy/moviebox/kdrama?page=${page}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const items = Array.isArray(data?.data?.items) ? data.data.items : [];
+
+    return items.map((item: any): Drama => {
+      const genreTags = typeof item.genre === 'string' && item.genre.trim()
+        ? item.genre.split(',').map((g: string) => g.trim()).filter(Boolean)
+        : ['한국'];
+      const viewers = typeof item.viewers === 'number' ? item.viewers : 0;
+      const hotCode = viewers >= 1_000_000
+        ? `${(viewers / 1_000_000).toFixed(1)}M`
+        : viewers >= 1_000
+        ? `${(viewers / 1_000).toFixed(1)}K`
+        : String(viewers);
+      const imdbRating = parseFloat(item.imdbRatingValue) || 7;
+      const ageRating = item.contentRating === 'TV-MA' ? '19' : item.contentRating === 'TV-14' ? '15' : 'ALL';
+
+      return {
+        bookId: String(item.subjectId),
+        bookName: item.title || '제목 없음',
+        introduction: item.description || item.postTitle || '',
+        cover: item.cover?.url || '',
+        tagNames: genreTags,
+        hotCode,
+        totalEpisodes: 1,
+        rating: Math.min(5, Math.round((imdbRating / 2) * 10) / 10),
+        genre: genreTags[0] || '한국',
+        ageRating,
+        releaseYear: item.releaseDate?.slice(0, 4),
+        isExclusive: true,
+        episodes: generateEpisodes(1, item.title || '영화'),
+      };
+    });
+  } catch (e) {
+    console.error('Failed to fetch Korea movies:', e);
+    return [];
+  }
+}
+
 export async function fetchDramaDetailApi(bookId: string, locale: string = 'ko'): Promise<any> {
   try {
     const res = await fetch(`/api/proxy/dramabox/detail?id=${encodeURIComponent(bookId)}&locale=${encodeURIComponent(locale)}`);

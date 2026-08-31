@@ -76,6 +76,21 @@ async function startServer() {
     }
   });
 
+  // Proxy for MovieBox K-drama listing (separate catalog source, browse-only)
+  app.get("/api/proxy/moviebox/kdrama", async (req, res) => {
+    try {
+      const queryString = new URLSearchParams(req.query as any).toString();
+      const url = `https://api.sansekai.my.id/api/moviebox/k-drama${queryString ? `?${queryString}` : ''}`;
+      const response = await fetch(url, {
+        headers: { "Accept": "*/*" }
+      });
+      const data = await response.json();
+      return res.json(data);
+    } catch (err: any) {
+      return res.status(500).json({ code: -1, message: err.message });
+    }
+  });
+
   // Proxy for Puruboy DramaBox Detail API (/api/dramabox/detail)
   app.get("/api/proxy/dramabox/detail", async (req, res) => {
     try {

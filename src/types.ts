@@ -135,7 +135,7 @@ export interface CollectionGroup {
 }
 
 export type MainTabType = 'home' | 'reels' | 'membership' | 'storage' | 'mypage';
-export type HomeCategoryType = '추천' | '신작' | '인기 순위' | '분류' | '성인';
+export type HomeCategoryType = '추천' | '신작' | '인기 순위' | '분류' | '한국' | '성인';
 export type StorageSubTabType = 'history' | 'favorites' | 'downloads';
 export type MyPageSubTabType = 'recommendations' | 'favorites' | 'history' | 'reviews' | 'settings';
 

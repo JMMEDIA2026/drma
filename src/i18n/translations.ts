@@ -27,7 +27,7 @@ type Dict = Record<string, string>;
 export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   ko: {
     nav_home: '홈', nav_reels: '추천', nav_membership: '멤버십', nav_storage: '보관함', nav_mypage: '마이',
-    cat_recommend: '추천', cat_new: '신작', cat_ranking: '인기 순위', cat_classify: '분류', cat_adult: '성인',
+    cat_recommend: '추천', cat_new: '신작', cat_ranking: '인기 순위', cat_classify: '분류', cat_korea: '한국', cat_adult: '성인',
     auth_title: 'JmBox', auth_subtitle: '최신 K-드라마 숏폼 스트리밍',
     auth_login: '로그인', auth_signup: '회원가입', auth_nickname: '닉네임', auth_email: '이메일',
     auth_password: '비밀번호 (8자 이상)', auth_confirm_password: '비밀번호 확인',
@@ -41,7 +41,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   en: {
     nav_home: 'Home', nav_reels: 'For You', nav_membership: 'Membership', nav_storage: 'Library', nav_mypage: 'My',
-    cat_recommend: 'For You', cat_new: 'New', cat_ranking: 'Top Ranking', cat_classify: 'Browse', cat_adult: 'Adult',
+    cat_recommend: 'For You', cat_new: 'New', cat_ranking: 'Top Ranking', cat_classify: 'Browse', cat_korea: 'Korea', cat_adult: 'Adult',
     auth_title: 'JmBox', auth_subtitle: 'The latest K-drama short-form streaming',
     auth_login: 'Log In', auth_signup: 'Sign Up', auth_nickname: 'Nickname', auth_email: 'Email',
     auth_password: 'Password (8+ characters)', auth_confirm_password: 'Confirm Password',
@@ -55,7 +55,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   in: {
     nav_home: 'Beranda', nav_reels: 'Untukmu', nav_membership: 'Keanggotaan', nav_storage: 'Koleksi', nav_mypage: 'Saya',
-    cat_recommend: 'Untukmu', cat_new: 'Terbaru', cat_ranking: 'Peringkat Teratas', cat_classify: 'Jelajahi', cat_adult: 'Dewasa',
+    cat_recommend: 'Untukmu', cat_new: 'Terbaru', cat_ranking: 'Peringkat Teratas', cat_classify: 'Jelajahi', cat_korea: 'Korea', cat_adult: 'Dewasa',
     auth_title: 'JmBox', auth_subtitle: 'Streaming drama Korea singkat terbaru',
     auth_login: 'Masuk', auth_signup: 'Daftar', auth_nickname: 'Nama Panggilan', auth_email: 'Email',
     auth_password: 'Kata Sandi (min. 8 karakter)', auth_confirm_password: 'Konfirmasi Kata Sandi',
@@ -69,7 +69,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   th: {
     nav_home: 'หน้าแรก', nav_reels: 'สำหรับคุณ', nav_membership: 'สมาชิก', nav_storage: 'คลัง', nav_mypage: 'ของฉัน',
-    cat_recommend: 'สำหรับคุณ', cat_new: 'ใหม่', cat_ranking: 'อันดับยอดนิยม', cat_classify: 'หมวดหมู่', cat_adult: 'ผู้ใหญ่',
+    cat_recommend: 'สำหรับคุณ', cat_new: 'ใหม่', cat_ranking: 'อันดับยอดนิยม', cat_classify: 'หมวดหมู่', cat_korea: 'เกาหลี', cat_adult: 'ผู้ใหญ่',
     auth_title: 'JmBox', auth_subtitle: 'สตรีมซีรีส์เกาหลีแบบสั้นล่าสุด',
     auth_login: 'เข้าสู่ระบบ', auth_signup: 'สมัครสมาชิก', auth_nickname: 'ชื่อเล่น', auth_email: 'อีเมล',
     auth_password: 'รหัสผ่าน (8 ตัวขึ้นไป)', auth_confirm_password: 'ยืนยันรหัสผ่าน',
@@ -83,7 +83,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   es: {
     nav_home: 'Inicio', nav_reels: 'Para ti', nav_membership: 'Membresía', nav_storage: 'Biblioteca', nav_mypage: 'Mi cuenta',
-    cat_recommend: 'Para ti', cat_new: 'Nuevo', cat_ranking: 'Más populares', cat_classify: 'Explorar', cat_adult: 'Adultos',
+    cat_recommend: 'Para ti', cat_new: 'Nuevo', cat_ranking: 'Más populares', cat_classify: 'Explorar', cat_korea: 'Corea', cat_adult: 'Adultos',
     auth_title: 'JmBox', auth_subtitle: 'Streaming de K-dramas en formato corto',
     auth_login: 'Iniciar sesión', auth_signup: 'Registrarse', auth_nickname: 'Apodo', auth_email: 'Correo electrónico',
     auth_password: 'Contraseña (mín. 8 caracteres)', auth_confirm_password: 'Confirmar contraseña',
@@ -97,7 +97,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   pt: {
     nav_home: 'Início', nav_reels: 'Para você', nav_membership: 'Assinatura', nav_storage: 'Biblioteca', nav_mypage: 'Minha conta',
-    cat_recommend: 'Para você', cat_new: 'Novidades', cat_ranking: 'Mais populares', cat_classify: 'Explorar', cat_adult: 'Adulto',
+    cat_recommend: 'Para você', cat_new: 'Novidades', cat_ranking: 'Mais populares', cat_classify: 'Explorar', cat_korea: 'Coreia', cat_adult: 'Adulto',
     auth_title: 'JmBox', auth_subtitle: 'Streaming dos mais recentes K-dramas em formato curto',
     auth_login: 'Entrar', auth_signup: 'Cadastrar', auth_nickname: 'Apelido', auth_email: 'E-mail',
     auth_password: 'Senha (mín. 8 caracteres)', auth_confirm_password: 'Confirmar senha',
@@ -111,7 +111,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   fr: {
     nav_home: 'Accueil', nav_reels: 'Pour vous', nav_membership: 'Abonnement', nav_storage: 'Bibliothèque', nav_mypage: 'Mon compte',
-    cat_recommend: 'Pour vous', cat_new: 'Nouveautés', cat_ranking: 'Classement', cat_classify: 'Parcourir', cat_adult: 'Adulte',
+    cat_recommend: 'Pour vous', cat_new: 'Nouveautés', cat_ranking: 'Classement', cat_classify: 'Parcourir', cat_korea: 'Corée', cat_adult: 'Adulte',
     auth_title: 'JmBox', auth_subtitle: 'Le dernier streaming de K-dramas au format court',
     auth_login: 'Connexion', auth_signup: 'Inscription', auth_nickname: 'Pseudo', auth_email: 'E-mail',
     auth_password: 'Mot de passe (8 caractères min.)', auth_confirm_password: 'Confirmer le mot de passe',
@@ -125,7 +125,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   de: {
     nav_home: 'Start', nav_reels: 'Für dich', nav_membership: 'Mitgliedschaft', nav_storage: 'Bibliothek', nav_mypage: 'Ich',
-    cat_recommend: 'Für dich', cat_new: 'Neu', cat_ranking: 'Bestenliste', cat_classify: 'Durchsuchen', cat_adult: 'Ab 18',
+    cat_recommend: 'Für dich', cat_new: 'Neu', cat_ranking: 'Bestenliste', cat_classify: 'Durchsuchen', cat_korea: 'Korea', cat_adult: 'Ab 18',
     auth_title: 'JmBox', auth_subtitle: 'Die neuesten K-Drama-Kurzserien im Stream',
     auth_login: 'Anmelden', auth_signup: 'Registrieren', auth_nickname: 'Spitzname', auth_email: 'E-Mail',
     auth_password: 'Passwort (mind. 8 Zeichen)', auth_confirm_password: 'Passwort bestätigen',
@@ -139,7 +139,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   it: {
     nav_home: 'Home', nav_reels: 'Per te', nav_membership: 'Abbonamento', nav_storage: 'Libreria', nav_mypage: 'Il mio account',
-    cat_recommend: 'Per te', cat_new: 'Novità', cat_ranking: 'Classifica', cat_classify: 'Esplora', cat_adult: 'Adulti',
+    cat_recommend: 'Per te', cat_new: 'Novità', cat_ranking: 'Classifica', cat_classify: 'Esplora', cat_korea: 'Corea', cat_adult: 'Adulti',
     auth_title: 'JmBox', auth_subtitle: 'Streaming dei più recenti K-drama in formato breve',
     auth_login: 'Accedi', auth_signup: 'Registrati', auth_nickname: 'Nickname', auth_email: 'Email',
     auth_password: 'Password (min. 8 caratteri)', auth_confirm_password: 'Conferma password',
@@ -153,7 +153,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   tr: {
     nav_home: 'Ana Sayfa', nav_reels: 'Senin İçin', nav_membership: 'Üyelik', nav_storage: 'Kitaplık', nav_mypage: 'Hesabım',
-    cat_recommend: 'Senin İçin', cat_new: 'Yeni', cat_ranking: 'En Popüler', cat_classify: 'Keşfet', cat_adult: 'Yetişkin',
+    cat_recommend: 'Senin İçin', cat_new: 'Yeni', cat_ranking: 'En Popüler', cat_classify: 'Keşfet', cat_korea: 'Kore', cat_adult: 'Yetişkin',
     auth_title: 'JmBox', auth_subtitle: 'En yeni K-drama kısa dizi yayını',
     auth_login: 'Giriş Yap', auth_signup: 'Kayıt Ol', auth_nickname: 'Takma Ad', auth_email: 'E-posta',
     auth_password: 'Şifre (en az 8 karakter)', auth_confirm_password: 'Şifreyi Onayla',
@@ -167,7 +167,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   vi: {
     nav_home: 'Trang chủ', nav_reels: 'Dành cho bạn', nav_membership: 'Hội viên', nav_storage: 'Thư viện', nav_mypage: 'Của tôi',
-    cat_recommend: 'Dành cho bạn', cat_new: 'Mới', cat_ranking: 'Xếp hạng', cat_classify: 'Khám phá', cat_adult: 'Người lớn',
+    cat_recommend: 'Dành cho bạn', cat_new: 'Mới', cat_ranking: 'Xếp hạng', cat_classify: 'Khám phá', cat_korea: 'Hàn Quốc', cat_adult: 'Người lớn',
     auth_title: 'JmBox', auth_subtitle: 'Xem phim ngắn Hàn Quốc mới nhất',
     auth_login: 'Đăng nhập', auth_signup: 'Đăng ký', auth_nickname: 'Biệt danh', auth_email: 'Email',
     auth_password: 'Mật khẩu (tối thiểu 8 ký tự)', auth_confirm_password: 'Xác nhận mật khẩu',
@@ -181,7 +181,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   ja: {
     nav_home: 'ホーム', nav_reels: 'おすすめ', nav_membership: 'メンバーシップ', nav_storage: '保管庫', nav_mypage: 'マイページ',
-    cat_recommend: 'おすすめ', cat_new: '新作', cat_ranking: '人気ランキング', cat_classify: '分類', cat_adult: '成人向け',
+    cat_recommend: 'おすすめ', cat_new: '新作', cat_ranking: '人気ランキング', cat_classify: '分類', cat_korea: '韓国', cat_adult: '成人向け',
     auth_title: 'JmBox', auth_subtitle: '最新韓国ドラマのショート配信',
     auth_login: 'ログイン', auth_signup: '会員登録', auth_nickname: 'ニックネーム', auth_email: 'メールアドレス',
     auth_password: 'パスワード（8文字以上）', auth_confirm_password: 'パスワード確認',
@@ -195,7 +195,7 @@ export const TRANSLATIONS: Record<LanguageCode, Dict> = {
   },
   zh: {
     nav_home: '首页', nav_reels: '推荐', nav_membership: '会员', nav_storage: '收藏夹', nav_mypage: '我的',
-    cat_recommend: '推荐', cat_new: '新剧', cat_ranking: '人气排行', cat_classify: '分类', cat_adult: '成人',
+    cat_recommend: '推荐', cat_new: '新剧', cat_ranking: '人气排行', cat_classify: '分类', cat_korea: '韩国', cat_adult: '成人',
     auth_title: 'JmBox', auth_subtitle: '最新韩剧短剧在线观看',
     auth_login: '登录', auth_signup: '注册', auth_nickname: '昵称', auth_email: '邮箱',
     auth_password: '密码（至少8位）', auth_confirm_password: '确认密码',

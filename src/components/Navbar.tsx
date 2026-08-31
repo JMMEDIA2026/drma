@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { HomeCategoryType } from '../types';
 import { LANGUAGES } from '../i18n/translations';
 
-const BASE_CATEGORIES: HomeCategoryType[] = ['추천', '신작', '인기 순위', '분류'];
+const BASE_CATEGORIES: HomeCategoryType[] = ['추천', '신작', '인기 순위', '분류', '한국'];
 
 // Display labels are translated via t(); the underlying category values stay
 // in Korean since HomeView's filtering logic compares against them directly.
@@ -13,6 +13,7 @@ const CATEGORY_LABEL_KEYS: Record<HomeCategoryType, string> = {
   '신작': 'cat_new',
   '인기 순위': 'cat_ranking',
   '분류': 'cat_classify',
+  '한국': 'cat_korea',
   '성인': 'cat_adult',
 };
 

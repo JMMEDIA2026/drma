@@ -7,7 +7,7 @@ import { AdBanner } from './AdBanner';
 import { HorizontalAdBanner } from './HorizontalAdBanner';
 import { getGenreTheme, getDramaYear } from '../data/genreStyles';
 import { DRAMA_CATEGORIES } from '../data/categories';
-import { fetchDramasByCategory } from '../services/api';
+import { fetchDramasByCategory, fetchKoreaMovies } from '../services/api';
 
 const LANGUAGE_FILTERS = [
   '전체',
@@ -41,6 +41,26 @@ export const HomeView: React.FC = () => {
   const [liveCategoryLoading, setLiveCategoryLoading] = useState(false);
   const [subCategoryTag, setSubCategoryTag] = useState<string | null>(null);
   const [bentoData, setBentoData] = useState<Record<string, Drama[]>>({});
+  const [koreaMovies, setKoreaMovies] = useState<Drama[]>([]);
+  const [koreaLoading, setKoreaLoading] = useState(false);
+  const [koreaLoaded, setKoreaLoaded] = useState(false);
+
+  // '한국' tab — fetched lazily the first time it's selected, from a
+  // separate MovieBox catalog source (browse-only, no playable video).
+  useEffect(() => {
+    if (homeCategory !== '한국' || koreaLoaded) return;
+    let cancelled = false;
+    setKoreaLoading(true);
+    fetchKoreaMovies(1).then(results => {
+      if (cancelled) return;
+      setKoreaMovies(results);
+      setKoreaLoading(false);
+      setKoreaLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [homeCategory, koreaLoaded]);
 
   // Bento rows on '추천' are entirely live-API-driven — fetch each
   // collection's dramas from its real category id once on mount.
@@ -114,6 +134,9 @@ export const HomeView: React.FC = () => {
         list = list.filter(d => !d.isDubbed);
       }
       return list;
+    }
+    if (homeCategory === '한국') {
+      return koreaMovies;
     }
     if (homeCategory === '성인' && isAuthenticated && userProfile.isLifetime) {
       return dramas.filter(d => d.ageRating === '19');
@@ -513,10 +536,13 @@ export const HomeView: React.FC = () => {
                 ? '따끈따끈한 신작 드라마'
                 : homeCategory === '분류'
                 ? `${(liveCategoryId !== null ? (subCategoryTag || DRAMA_CATEGORIES.find(c => c.id === liveCategoryId)?.ko) : selectedTagFilter) || '전체'} 드라마`
+                : homeCategory === '한국'
+                ? '한국 영화·드라마'
                 : homeCategory === '성인'
                 ? '19세 이상 성인 컨텐츠'
                 : '지금 뜨는 인기 숏폼'}
             </h3>
+            {homeCategory === '한국' && koreaLoading && <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-400" />}
           </div>
           <span className="text-xs text-zinc-400">
             총 {displayDramas.length}편
