@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { Drama, MainTabType, HomeCategoryType, UserProfile, WatchHistoryItem, UserReview, RecommendationResult, AuthUser, AdSlot } from '../types';
 import { fetchLatestDramas, fetchRealEpisodes } from '../services/api';
-import { INITIAL_DRAMAS } from '../data/dramas';
 import { LanguageCode, DEFAULT_LANGUAGE, translate } from '../i18n/translations';
 import {
   clampMemberGrade,
@@ -242,7 +241,7 @@ const DEFAULT_USER: UserProfile = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [dramas, setDramas] = useState<Drama[]>(INITIAL_DRAMAS);
+  const [dramas, setDramas] = useState<Drama[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTabState] = useState<MainTabType>('home');
 
@@ -299,7 +298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedLanguageFilter, setSelectedLanguageFilter] = useState<string | null>(null);
   
   const [selectedDrama, setSelectedDrama] = useState<Drama | null>(null);
-  const [activePlayerDrama, setActivePlayerDrama] = useState<Drama | null>(INITIAL_DRAMAS[0]);
+  const [activePlayerDrama, setActivePlayerDrama] = useState<Drama | null>(null);
   const [activeEpisodeIndex, setActiveEpisodeIndex] = useState<number>(1);
   
   const [favorites, setFavorites] = useState<string[]>(() => {

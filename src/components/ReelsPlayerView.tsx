@@ -46,7 +46,8 @@ export const ReelsPlayerView: React.FC = () => {
     toggleDislikeDrama,
     isDramaLiked,
     isDramaDisliked,
-    userProfile
+    userProfile,
+    isLoading
   } = useApp();
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -134,7 +135,20 @@ export const ReelsPlayerView: React.FC = () => {
     setTouchStartY(null);
   };
 
-  if (!drama) return null;
+  if (!drama) {
+    return (
+      <div className="w-full h-[calc(100vh-62px)] bg-black flex flex-col items-center justify-center gap-3 text-zinc-400">
+        {isLoading ? (
+          <>
+            <div className="w-8 h-8 border-2 border-zinc-600 border-t-rose-500 rounded-full animate-spin" />
+            <p className="text-sm">불러오는 중...</p>
+          </>
+        ) : (
+          <p className="text-sm">표시할 드라마가 없습니다.</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

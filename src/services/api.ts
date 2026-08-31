@@ -1,5 +1,5 @@
 import { Drama, Episode } from '../types';
-import { INITIAL_DRAMAS, generateEpisodes } from '../data/dramas';
+import { generateEpisodes } from '../data/dramas';
 
 export async function fetchLatestDramas(locale: string = 'ko'): Promise<Drama[]> {
   try {
@@ -7,9 +7,9 @@ export async function fetchLatestDramas(locale: string = 'ko'): Promise<Drama[]>
     if (response.ok) {
       const result = await response.json();
       const rawData = result.data || result;
-      
+
       const itemsMap = new Map<string, any>();
-      
+
       if (rawData) {
         if (Array.isArray(rawData.featured)) {
           rawData.featured.forEach((item: any) => {
@@ -37,7 +37,7 @@ export async function fetchLatestDramas(locale: string = 'ko'): Promise<Drama[]>
 
       const list = Array.from(itemsMap.values());
       if (list.length > 0) {
-        return await mergeWithInitialDramas(list);
+        return transformApiDramas(list);
       }
     }
   } catch (error) {
@@ -49,15 +49,16 @@ export async function fetchLatestDramas(locale: string = 'ko'): Promise<Drama[]>
     if (response.ok) {
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
-        return await mergeWithInitialDramas(result.data);
+        return transformApiDramas(result.data);
       }
     }
   } catch (error) {
     console.warn('Could not fetch from server proxy:', error);
   }
 
-  // Fallback to rich curated list
-  return INITIAL_DRAMAS;
+  // Both live sources failed — no local fallback data; caller shows an
+  // empty/error state instead of mock content.
+  return [];
 }
 
 export async function fetchDramaCategories(id?: string, page?: number): Promise<any> {
@@ -208,36 +209,11 @@ export async function searchSoundCloudApi(query: string): Promise<any> {
   return null;
 }
 
-// Pool of real DramaBox poster URLs, harvested from the live catalog and
-// reused as thumbnails for the curated/mock dramas so the whole app shows
-// authentic K-drama artwork instead of generic stock photos.
-let realCoverPoolPromise: Promise<string[]> | null = null;
-
-function getRealCoverPool(): Promise<string[]> {
-  if (realCoverPoolPromise) return realCoverPoolPromise;
-
-  realCoverPoolPromise = (async () => {
-    const covers: string[] = [];
-    for (const page of [1, 2, 3]) {
-      try {
-        const res = await fetch(`/api/proxy/dramabox/category?page=${page}`);
-        if (!res.ok) continue;
-        const data = await res.json();
-        (data.results || []).forEach((item: any) => {
-          if (item.cover) covers.push(item.cover);
-        });
-      } catch (e) {
-        console.warn('Failed to fetch real cover pool page', page, e);
-      }
-    }
-    return covers;
-  })();
-
-  return realCoverPoolPromise;
-}
-
-async function mergeWithInitialDramas(apiList: any[]): Promise<Drama[]> {
-  const transformedApiDramas: Drama[] = apiList.map((item, index) => {
+// Transforms raw items from the live DramaBox API into the app's Drama
+// shape. Every field is sourced from the live response — no local/mock
+// data is mixed in.
+function transformApiDramas(apiList: any[]): Drama[] {
+  return apiList.map((item, index) => {
     const tags = Array.isArray(item.tagNames) && item.tagNames.length > 0
       ? item.tagNames
       : ['인기', 'K-드라마', '숏폼'];
@@ -250,7 +226,7 @@ async function mergeWithInitialDramas(apiList: any[]): Promise<Drama[]> {
       bookName: item.bookName || item.title || '제목 없음',
       introduction: item.introduction || item.desc || '최신 인기 숏폼 드라마입니다. 매회 숨가쁜 반전과 스릴 넘치는 전개를 지금 바로 감상해보세요.',
       author: item.author || 'STORYMATRIX',
-      cover: item.cover || item.image || INITIAL_DRAMAS[index % INITIAL_DRAMAS.length].cover,
+      cover: item.cover || item.image || '',
       tagNames: tags,
       hotCode: item.hotCode || `${(Math.random() * 3 + 1).toFixed(1)}M`,
       totalEpisodes: totalEp,
@@ -265,18 +241,5 @@ async function mergeWithInitialDramas(apiList: any[]): Promise<Drama[]> {
       episodes: generateEpisodes(totalEp, item.bookName || item.title || 'K-드라마')
     };
   });
-
-  const combined = [...transformedApiDramas];
-  const mockOnly = INITIAL_DRAMAS.filter(
-    initial => !combined.some(d => d.bookId === initial.bookId || d.bookName === initial.bookName)
-  );
-
-  const realCovers = await getRealCoverPool();
-  mockOnly.forEach((initial, index) => {
-    const realCover = realCovers.length > 0 ? realCovers[index % realCovers.length] : null;
-    combined.push(realCover ? { ...initial, cover: realCover, bannerCover: realCover } : initial);
-  });
-
-  return combined;
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, Flame, ChevronRight, Sparkles, TrendingUp, Trash2, Globe, ShieldAlert, Calendar, LayoutGrid, Loader2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Drama } from '../types';
@@ -40,6 +40,21 @@ export const HomeView: React.FC = () => {
   const [liveCategoryDramas, setLiveCategoryDramas] = useState<Drama[] | null>(null);
   const [liveCategoryLoading, setLiveCategoryLoading] = useState(false);
   const [subCategoryTag, setSubCategoryTag] = useState<string | null>(null);
+  const [bentoData, setBentoData] = useState<Record<string, Drama[]>>({});
+
+  // Bento rows on '추천' are entirely live-API-driven — fetch each
+  // collection's dramas from its real category id once on mount.
+  useEffect(() => {
+    let cancelled = false;
+    BENTO_COLLECTIONS.forEach(bento => {
+      fetchDramasByCategory(bento.categoryId, 1).then(results => {
+        if (!cancelled) setBentoData(prev => ({ ...prev, [bento.id]: results }));
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLiveCategoryClick = async (id: number | null) => {
     setSubCategoryTag(null);
@@ -373,7 +388,7 @@ export const HomeView: React.FC = () => {
       {homeCategory === '추천' && (
         <div className="space-y-4">
           {BENTO_COLLECTIONS.map((bento) => {
-            const listItems = dramas.filter(d => bento.itemIds.includes(d.bookId));
+            const listItems = bentoData[bento.id] || [];
             const bentoAdSlots = adSlots.filter(s => s.id.startsWith('ad_slot_bento_'));
 
             const isWine = bento.theme === 'wine';
