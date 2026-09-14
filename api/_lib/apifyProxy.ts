@@ -1,6 +1,7 @@
 import { request as httpRequest } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import type { Socket } from 'node:net';
+import { connect as tlsConnect } from 'node:tls';
 
 const DEFAULT_PROXY_HOST = 'proxy.apify.com';
 const DEFAULT_PROXY_PORT = '8000';
@@ -52,7 +53,7 @@ export async function fetchJsonViaApifyProxy(url: string, headers: Record<string
       method: 'GET',
       headers,
       agent: false,
-      createConnection: () => socket,
+      createConnection: () => tlsConnect({ socket, servername: target.hostname }),
     }, (response) => {
       const chunks: Buffer[] = [];
       response.on('data', (chunk: Buffer) => chunks.push(chunk));
